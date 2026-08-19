@@ -10,12 +10,13 @@
         .star-btn:hover { transform: scale(1.15); }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-0 md:p-4">
 
-    <div class="max-w-md w-full bg-white rounded-2xl shadow-sm border border-slate-100 p-8 text-center">
+    <!-- Container Utama: Secara default card, tapi akan menjadi full-frame khusus saat halaman ulasan aktif -->
+    <div id="main-container" class="w-full max-w-md min-h-screen md:min-h-0 bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center">
         
-        <!-- LOGO BRAND (Besar & Paling Atas) -->
-        <div class="mb-6">
+        <!-- LOGO BRAND (Hanya tampil di halaman aktivasi / memuat, hilang di halaman ulasan) -->
+        <div id="logo-box" class="mb-6">
             <img src="logo.png" alt="Logo Brand" class="h-24 w-auto mx-auto object-contain">
         </div>
 
@@ -47,14 +48,18 @@
             </button>
         </div>
 
-        <!-- Halaman Utama (Rating) -->
+        <!-- Halaman Utama (Rating - Full Frame Vertikal & Beraksen Biru) -->
         <div id="rating-page" class="hidden space-y-6">
-            <div class="text-center">
-                <h1 id="display-business" class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2"></h1>
-                <p class="text-xs text-slate-400 uppercase tracking-widest font-semibold">Berikan Ulasan Anda</p>
+            
+            <!-- Aksen Garis Biru Elegan & Nama Bisnis -->
+            <div class="text-center space-y-2">
+                <div class="w-10 h-1 bg-blue-600 mx-auto rounded-full mb-3"></div>
+                <h1 id="display-business" class="text-3xl font-extrabold text-slate-900 tracking-tight"></h1>
+                <p class="text-xs text-blue-600 uppercase tracking-widest font-bold">Berikan Ulasan Anda</p>
             </div>
 
-            <div class="flex justify-center gap-2" id="star-container">
+            <!-- Bintang -->
+            <div class="flex justify-center gap-2 py-2" id="star-container">
                 <button onclick="handleRating(1)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
                 <button onclick="handleRating(2)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
                 <button onclick="handleRating(3)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
@@ -62,7 +67,8 @@
                 <button onclick="handleRating(5)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
             </div>
 
-            <div id="bad-review-section" class="hidden space-y-3 text-left bg-slate-50 border border-slate-200 p-4 rounded-2xl">
+            <!-- Opsi Feedback Privat -->
+            <div id="bad-review-section" class="hidden space-y-3 text-left bg-blue-50/40 border border-blue-100 p-4 rounded-2xl">
                 <p class="text-xs font-semibold text-slate-700">Mohon maaf, apa yang bisa diperbaiki?</p>
                 <textarea id="feedback-msg" rows="3" placeholder="Tulis masukan Anda..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none bg-white"></textarea>
                 <button onclick="sendPrivateFeedbackToWhatsApp()" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition shadow-sm">
@@ -70,7 +76,8 @@
                 </button>
             </div>
 
-            <div id="good-review-section" class="hidden space-y-3 text-center bg-blue-50/50 border border-blue-100 p-4 rounded-2xl">
+            <!-- Opsi Google Review -->
+            <div id="good-review-section" class="hidden space-y-3 text-center bg-blue-50/60 border border-blue-100 p-4 rounded-2xl">
                 <p class="text-xs font-semibold text-blue-900">Terima kasih atas penilaian positif Anda!</p>
                 <a id="google-review-btn" href="#" target="_blank" class="block w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition font-semibold shadow-sm">
                     ⭐ Berikan Ulasan di Google Maps
@@ -94,11 +101,21 @@
                     if (res.success && res.data.status === "activated") {
                         targetReviewUrl = res.data.google_review_url;
                         ownerWaLink = res.data.whatsapp_link;
+                        
+                        // Sembunyikan logo gambar
+                        document.getElementById('logo-box').classList.add('hidden');
                         document.getElementById('heading').classList.add('hidden');
                         document.getElementById('subheading').classList.add('hidden');
+                        
+                        // Ubah container menjadi full-frame vertikal penuh tanpa border/shadow card
+                        const container = document.getElementById('main-container');
+                        container.className = "w-full max-w-md min-h-screen bg-white p-6 sm:p-8 text-center flex flex-col justify-center";
+
+                        // Tampilkan halaman ulasan
                         document.getElementById('rating-page').classList.remove('hidden');
                         document.getElementById('transition-box').classList.remove('hidden');
                         document.getElementById('display-business').textContent = res.data.business_name;
+                        
                         redirectTimer = setTimeout(() => { document.getElementById('transition-box').classList.add('hidden'); }, 1000);
                     } else {
                         document.getElementById('form-box').classList.remove('hidden');
