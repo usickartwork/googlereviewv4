@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aktivasi Kartu NFC Review</title>
+    <title>Aktivasi & Kelola Kartu NFC</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
@@ -12,13 +12,13 @@
         <h1 id="heading" class="text-xl font-bold text-gray-900 mb-1 text-center">Memuat data kartu...</h1>
         <p id="subheading" class="text-sm text-gray-500 mb-6 text-center">Silakan tunggu sebentar.</p>
 
+        <!-- Form untuk Kartu Belum Aktif (Termasuk Input PIN) -->
         <div id="form-box" class="hidden space-y-4">
-            <!-- Kotak Petunjuk dengan Link Productmate -->
             <div class="bg-blue-50 border border-blue-200 text-blue-800 text-xs p-3 rounded-lg leading-relaxed">
                 <span class="font-semibold block mb-1">💡 Petunjuk Aktivasi:</span>
-                1. Masukkan nama usaha atau bisnis Anda.<br>
-                2. Belum punya link review? <a href="https://productmate.com/google-review-link-generator" target="_blank" class="text-blue-600 underline font-semibold hover:text-blue-800">Klik di sini untuk Generate Link Google Review</a>.<br>
-                3. Salin dan tempel link hasil generate tersebut pada kolom di bawah.
+                1. Masukkan nama usaha dan buat <strong>PIN rahasia</strong> (untuk keamanan saat ingin mereset/mengubah data nanti).<br>
+                2. Belum punya link review? <a href="https://productmate.com/google-review-link-generator" target="_blank" class="text-blue-600 underline font-semibold hover:text-blue-800">Klik di sini untuk Generate Link</a>.<br>
+                3. Salin dan tempel link hasil generate tersebut.
             </div>
 
             <div>
@@ -31,15 +31,38 @@
                 <input type="url" id="review-url" placeholder="https://..." class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Buat PIN Keamanan (Angka/Huruf)</label>
+                <input type="text" id="card-pin" placeholder="Contoh: 1234" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-[10px] text-gray-400 mt-1">Simpan PIN ini baik-baik jika sewaktu-waktu ingin mengubah link kartu.</p>
+            </div>
+
             <button onclick="activateCard()" id="btn-activate" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 transition">
                 Aktifkan Kartu Sekarang
             </button>
         </div>
+
+        <!-- Tampilan Jika Kartu Sudah Aktif -->
+        <div id="active-box" class="hidden space-y-4 text-center">
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs p-3 rounded-lg">
+                <span class="font-semibold block mb-1">✅ Kartu Sudah Aktif</span>
+                Terdaftar untuk: <strong id="display-business" class="block text-sm mt-1"></strong>
+            </div>
+
+            <div class="space-y-2 pt-2">
+                <a id="btn-visit" href="#" target="_blank" class="block w-full bg-emerald-600 text-white font-medium py-2.5 rounded-lg hover:bg-emerald-700 transition text-sm">
+                    Kunjungi Link Review Saat Ini
+                </a>
+                
+                <button onclick="resetCard()" id="btn-reset" class="w-full bg-gray-100 text-red-600 border border-red-200 font-medium py-2.5 rounded-lg hover:bg-red-50 transition text-sm">
+                    🔄 Reset / Ubah Data Kartu Ini
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Ganti dengan URL /exec Apps Script Anda
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwHmoa3TBgAwEACtHqBOLpaTbUxykKTdQe5gRRtKxQlKntHO7Rvg6tmu4wbvmmAyfm0/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdpZvrpBLuiXNOcXeVREQpQGDq9Jr3KsbSvRaXAb8bbl4U4ZqFH3YT-q5FqHBcY7x6/exec";
 
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
@@ -55,7 +78,10 @@
                 .then(res => {
                     if (res.success) {
                         if (res.data.status === "activated") {
-                            window.location.replace(res.data.google_review_url);
+                            document.getElementById('heading').textContent = "Status Kartu";
+                            document.getElementById('display-business').textContent = res.data.business_name || "Bisnis Terdaftar";
+                            document.getElementById('btn-visit').href = res.data.google_review_url;
+                            document.getElementById('active-box').classList.remove('hidden');
                         } else {
                             document.getElementById('heading').textContent = "Aktifkan Kartu Anda";
                             document.getElementById('form-box').classList.remove('hidden');
@@ -71,9 +97,11 @@
                 });
         }
 
+        // Fungsi Aktivasi Kartu dengan PIN
         function activateCard() {
             const businessName = document.getElementById('business-name').value.trim();
             const reviewUrl = document.getElementById('review-url').value.trim();
+            const cardPin = document.getElementById('card-pin').value.trim();
             const btn = document.getElementById('btn-activate');
 
             if (!businessName) {
@@ -82,6 +110,10 @@
             }
             if (!reviewUrl) {
                 alert("Silakan masukkan URL Google Review terlebih dahulu!");
+                return;
+            }
+            if (!cardPin) {
+                alert("Silakan buat PIN keamanan terlebih dahulu!");
                 return;
             }
 
@@ -94,14 +126,15 @@
                     action: "activate", 
                     product_id: productId, 
                     google_review_url: reviewUrl,
-                    business_name: businessName
+                    business_name: businessName,
+                    pin: cardPin
                 })
             })
             .then(res => res.json())
             .then(result => {
-                if (result.success || result.message === "Activated successfully") {
-                    alert("Berhasil diaktifkan! Mengalihkan ke Google Review...");
-                    window.location.replace(reviewUrl);
+                if (result.success) {
+                    alert("Berhasil diaktifkan! Kartu Anda sekarang sudah diamankan dengan PIN.");
+                    location.reload();
                 } else {
                     alert("Gagal mengaktifkan data.");
                     btn.textContent = "Aktifkan Kartu Sekarang";
@@ -113,6 +146,39 @@
                 btn.textContent = "Aktifkan Kartu Sekarang";
                 btn.disabled = false;
             });
+        }
+
+        // Fungsi Reset Kartu Meminta PIN
+        function resetCard() {
+            const inputPin = prompt("Masukkan PIN keamanan kartu ini untuk mereset/mengubah data:");
+            if (inputPin === null) return; // Jika dibatalkan
+
+            if (!inputPin.trim()) {
+                alert("PIN tidak boleh kosong!");
+                return;
+            }
+
+            const btnReset = document.getElementById('btn-reset');
+            btnReset.textContent = "Memverifikasi PIN...";
+            btnReset.disabled = true;
+
+            fetch(`${SCRIPT_URL}?action=reset&product_id=${productId}&pin=${encodeURIComponent(inputPin)}`)
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        alert("PIN benar! Kartu berhasil direset dan siap digunakan kembali.");
+                        location.reload();
+                    } else {
+                        alert("Gagal: " + (result.message || "PIN yang Anda masukkan salah!"));
+                        btnReset.textContent = "🔄 Reset / Ubah Data Kartu Ini";
+                        btnReset.disabled = false;
+                    }
+                })
+                .catch(() => {
+                    alert("Terjadi kesalahan jaringan saat verifikasi PIN.");
+                    btnReset.textContent = "🔄 Reset / Ubah Data Kartu Ini";
+                    btnReset.disabled = false;
+                });
         }
     </script>
 </body>
