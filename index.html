@@ -105,21 +105,27 @@
             document.getElementById('heading').textContent = "Product ID Tidak Ditemukan";
         } else {
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
-                .then(res => res.json())
-                .then(res => {
-                    if (res.success && res.data.status === "activated") {
-                        targetReviewUrl = res.data.google_review_url;
-                        businessNameText = res.data.business_name;
-                        ownerWaLink = res.data.whatsapp_link;
-                        document.getElementById('rating-page').classList.remove('hidden');
-                        document.getElementById('transition-box').classList.remove('hidden');
-                        document.getElementById('display-business').textContent = businessNameText;
-                        redirectTimer = setTimeout(() => { document.getElementById('transition-box').classList.add('hidden'); }, 1000);
-                    } else {
-                        document.getElementById('form-box').classList.remove('hidden');
-                        document.getElementById('heading').textContent = "Aktifkan Kartu Anda";
-                    }
-                });
+            .then(res => res.json())
+            .then(res => {
+                if (res.success && res.data.status === "activated") {
+                    targetReviewUrl = res.data.google_review_url;
+                    businessNameText = res.data.business_name;
+                    ownerWaLink = res.data.whatsapp_link;
+                    
+                    // --- TAMBAHAN: Sembunyikan elemen yang tidak perlu ---
+                    document.getElementById('heading').classList.add('hidden'); 
+                    document.getElementById('subheading').classList.add('hidden');
+                    // ----------------------------------------------------
+                    
+                    document.getElementById('rating-page').classList.remove('hidden');
+                    document.getElementById('transition-box').classList.remove('hidden');
+                    document.getElementById('display-business').textContent = businessNameText;
+                    redirectTimer = setTimeout(() => { document.getElementById('transition-box').classList.add('hidden'); }, 1000);
+                } else {
+                    document.getElementById('form-box').classList.remove('hidden');
+                    document.getElementById('heading').textContent = "Aktifkan Kartu Anda"; // Tetap tampilkan judul jika belum aktif
+                }
+            });
         }
 
         function handleRating(rating) {
