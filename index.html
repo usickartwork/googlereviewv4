@@ -8,15 +8,29 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
 
-    <div class="max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-        <!-- Status / Loading -->
-        <h1 id="heading" class="text-xl font-bold text-gray-900 mb-2">Memuat data kartu...</h1>
-        <p id="subheading" class="text-sm text-gray-500 mb-6">Silakan tunggu sebentar.</p>
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <h1 id="heading" class="text-xl font-bold text-gray-900 mb-1 text-center">Memuat data kartu...</h1>
+        <p id="subheading" class="text-sm text-gray-500 mb-6 text-center">Silakan tunggu sebentar.</p>
 
-        <!-- Form Aktivasi (Hidden by default) -->
-        <div id="form-box" class="hidden">
-            <p class="text-gray-600 text-sm mb-3">Masukkan Link Google Review Bisnis Anda:</p>
-            <input type="url" id="review-url" placeholder="https://g.page/r/..." class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div id="form-box" class="hidden space-y-4">
+            <!-- Kotak Petunjuk dengan Link Productmate -->
+            <div class="bg-blue-50 border border-blue-200 text-blue-800 text-xs p-3 rounded-lg leading-relaxed">
+                <span class="font-semibold block mb-1">💡 Petunjuk Aktivasi:</span>
+                1. Masukkan nama usaha atau bisnis Anda.<br>
+                2. Belum punya link review? <a href="https://productmate.com/google-review-link-generator" target="_blank" class="text-blue-600 underline font-semibold hover:text-blue-800">Klik di sini untuk Generate Link Google Review</a>.<br>
+                3. Salin dan tempel link hasil generate tersebut pada kolom di bawah.
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Nama Bisnis / Usaha</label>
+                <input type="text" id="business-name" placeholder="Contoh: Coffee Shop Sukses" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Link Google Review</label>
+                <input type="url" id="review-url" placeholder="https://..." class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
             <button onclick="activateCard()" id="btn-activate" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 transition">
                 Aktifkan Kartu Sekarang
             </button>
@@ -24,8 +38,8 @@
     </div>
 
     <script>
-        // === GANTI LINK DI BAWAH INI DENGAN URL WEB APP APPS SCRIPT ANDA (/exec) ===
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxluaJjQ1bgB_2Oxbfho4ljJi9M0ATU5IVc4RjYsVDgLnAKYX53Ff5cHDv5yuDV_Upp/exec";
+        // Ganti dengan URL /exec Apps Script Anda
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwHmoa3TBgAwEACtHqBOLpaTbUxykKTdQe5gRRtKxQlKntHO7Rvg6tmu4wbvmmAyfm0/exec";
 
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
@@ -36,16 +50,13 @@
         } else {
             document.getElementById('subheading').textContent = `Product ID: ${productId}`;
 
-            // Cek status ke Google Sheets via Apps Script
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
                 .then(res => res.json())
                 .then(res => {
                     if (res.success) {
                         if (res.data.status === "activated") {
-                            // Jika sudah aktif, langsung lempar ke Google Review pembeli
                             window.location.replace(res.data.google_review_url);
                         } else {
-                            // Jika belum aktif, tampilkan form input link
                             document.getElementById('heading').textContent = "Aktifkan Kartu Anda";
                             document.getElementById('form-box').classList.remove('hidden');
                         }
@@ -54,17 +65,21 @@
                         document.getElementById('subheading').textContent = `ID "${productId}" tidak ditemukan di database.`;
                     }
                 })
-                .catch(err => {
+                .catch(() => {
                     document.getElementById('heading').textContent = "Kesalahan Koneksi";
                     document.getElementById('subheading').textContent = "Gagal terhubung ke server database.";
                 });
         }
 
-        // Fungsi saat tombol aktivasi diklik
         function activateCard() {
+            const businessName = document.getElementById('business-name').value.trim();
             const reviewUrl = document.getElementById('review-url').value.trim();
             const btn = document.getElementById('btn-activate');
 
+            if (!businessName) {
+                alert("Silakan masukkan Nama Bisnis terlebih dahulu!");
+                return;
+            }
             if (!reviewUrl) {
                 alert("Silakan masukkan URL Google Review terlebih dahulu!");
                 return;
@@ -78,7 +93,8 @@
                 body: JSON.stringify({ 
                     action: "activate", 
                     product_id: productId, 
-                    google_review_url: reviewUrl 
+                    google_review_url: reviewUrl,
+                    business_name: businessName
                 })
             })
             .then(res => res.json())
