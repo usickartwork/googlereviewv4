@@ -9,10 +9,11 @@
 <body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
 
     <div class="max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-        <h1 id="heading" class="text-xl font-bold text-gray-900 mb-1 text-center">Memuat data kartu...</h1>
+        <!-- Judul bisa diklik 5 kali untuk memunculkan menu rahasia -->
+        <h1 id="heading" onclick="handleSecretClick()" class="text-xl font-bold text-gray-900 mb-1 text-center cursor-pointer select-none" title="Ketuk beberapa kali jika ingin mengubah data">Memuat data kartu...</h1>
         <p id="subheading" class="text-sm text-gray-500 mb-6 text-center">Silakan tunggu sebentar.</p>
 
-        <!-- Form untuk Kartu Belum Aktif (Termasuk Input PIN) -->
+        <!-- Form untuk Kartu Belum Aktif -->
         <div id="form-box" class="hidden space-y-4">
             <div class="bg-blue-50 border border-blue-200 text-blue-800 text-xs p-3 rounded-lg leading-relaxed">
                 <span class="font-semibold block mb-1">💡 Petunjuk Aktivasi:</span>
@@ -50,12 +51,13 @@
             </div>
 
             <div class="space-y-2 pt-2">
-                <a id="btn-visit" href="#" target="_blank" class="block w-full bg-emerald-600 text-white font-medium py-2.5 rounded-lg hover:bg-emerald-700 transition text-sm">
-                    Kunjungi Link Review Saat Ini
+                <a id="btn-visit" href="#" target="_blank" class="block w-full bg-emerald-600 text-white font-medium py-2.5 rounded-lg hover:bg-emerald-700 transition text-sm font-semibold shadow-sm">
+                    🚀 Berikan Ulasan Sekarang
                 </a>
                 
-                <button onclick="resetCard()" id="btn-reset" class="w-full bg-gray-100 text-red-600 border border-red-200 font-medium py-2.5 rounded-lg hover:bg-red-50 transition text-sm">
-                    🔄 Reset / Ubah Data Kartu Ini
+                <!-- Tombol Reset Sembunyikan secara Default -->
+                <button onclick="resetCard()" id="btn-reset" class="hidden w-full bg-gray-100 text-red-600 border border-red-200 font-medium py-2 rounded-lg hover:bg-red-50 transition text-xs">
+                    🔄 Mode Pemilik: Reset / Ubah Data Kartu
                 </button>
             </div>
         </div>
@@ -66,6 +68,7 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
+        let secretClickCount = 0; // Penghitung ketukan rahasia
 
         if (!productId) {
             document.getElementById('heading').textContent = "Product ID Tidak Ditemukan";
@@ -97,23 +100,28 @@
                 });
         }
 
-        // Fungsi Aktivasi Kartu dengan PIN
+        // Trik Rahasia: Ketuk tulisan "Status Kartu" sebanyak 5 kali untuk memunculkan tombol reset
+        function handleSecretClick() {
+            const activeBox = document.getElementById('active-box');
+            // Hanya aktif jika kartu dalam kondisi sudah aktif
+            if (!activeBox.classList.contains('hidden')) {
+                secretClickCount++;
+                if (secretClickCount === 5) {
+                    document.getElementById('btn-reset').classList.remove('hidden');
+                    alert("Menu pemilik terbuka!");
+                }
+            }
+        }
+
+        // Fungsi Aktivasi Kartu
         function activateCard() {
             const businessName = document.getElementById('business-name').value.trim();
             const reviewUrl = document.getElementById('review-url').value.trim();
             const cardPin = document.getElementById('card-pin').value.trim();
             const btn = document.getElementById('btn-activate');
 
-            if (!businessName) {
-                alert("Silakan masukkan Nama Bisnis terlebih dahulu!");
-                return;
-            }
-            if (!reviewUrl) {
-                alert("Silakan masukkan URL Google Review terlebih dahulu!");
-                return;
-            }
-            if (!cardPin) {
-                alert("Silakan buat PIN keamanan terlebih dahulu!");
+            if (!businessName || !reviewUrl || !cardPin) {
+                alert("Mohon lengkapi semua kolom (Nama Bisnis, Link Review, dan PIN)!");
                 return;
             }
 
@@ -133,7 +141,7 @@
             .then(res => res.json())
             .then(result => {
                 if (result.success) {
-                    alert("Berhasil diaktifkan! Kartu Anda sekarang sudah diamankan dengan PIN.");
+                    alert("Berhasil diaktifkan!");
                     location.reload();
                 } else {
                     alert("Gagal mengaktifkan data.");
@@ -148,10 +156,10 @@
             });
         }
 
-        // Fungsi Reset Kartu Meminta PIN
+        // Fungsi Reset Kartu dengan PIN
         function resetCard() {
             const inputPin = prompt("Masukkan PIN keamanan kartu ini untuk mereset/mengubah data:");
-            if (inputPin === null) return; // Jika dibatalkan
+            if (inputPin === null) return;
 
             if (!inputPin.trim()) {
                 alert("PIN tidak boleh kosong!");
@@ -166,17 +174,17 @@
                 .then(res => res.json())
                 .then(result => {
                     if (result.success) {
-                        alert("PIN benar! Kartu berhasil direset dan siap digunakan kembali.");
+                        alert("PIN benar! Kartu berhasil direset.");
                         location.reload();
                     } else {
                         alert("Gagal: " + (result.message || "PIN yang Anda masukkan salah!"));
-                        btnReset.textContent = "🔄 Reset / Ubah Data Kartu Ini";
+                        btnReset.textContent = "🔄 Mode Pemilik: Reset / Ubah Data Kartu";
                         btnReset.disabled = false;
                     }
                 })
                 .catch(() => {
                     alert("Terjadi kesalahan jaringan saat verifikasi PIN.");
-                    btnReset.textContent = "🔄 Reset / Ubah Data Kartu Ini";
+                    btnReset.textContent = "🔄 Mode Pemilik: Reset / Ubah Data Kartu";
                     btnReset.disabled = false;
                 });
         }
