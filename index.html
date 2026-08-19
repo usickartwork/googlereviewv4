@@ -188,26 +188,16 @@
         }
 
        function sendPrivateFeedbackToWhatsApp() {
-            // Ambil pesan dari kotak (hanya sebagai formalitas/catatan pelanggan)
-            const msg = document.getElementById('feedback-msg').value.trim();
-            
-            // Langsung gunakan link WhatsApp owner yang bersih dari database
-            let finalWaUrl = ownerWaLink.trim();
+            // Kolom pesan dibiarkan sebagai hiasan, langsung buka link WhatsApp owner murni
+            let cleanWaLink = ownerWaLink.trim();
 
-            // Jika pelanggan sempat mengetik pesan, kita coba sisipkan sebagai teks otomatis. 
-            // Jika kosong, langsung buka link chat bersih milik owner.
-            if (msg) {
-                const textToOwner = encodeURIComponent(`Halo, saya ingin memberi masukan/kritik untuk ${businessNameText} setelah menilai bintang ${selectedStarRating}:\n\n"${msg}"`);
-                
-                if (finalWaUrl.includes('?')) {
-                    finalWaUrl += `&text=${textToOwner}`;
-                } else {
-                    finalWaUrl += `?text=${textToOwner}`;
-                }
+            if (!cleanWaLink) {
+                alert("Link WhatsApp owner tidak ditemukan.");
+                return;
             }
 
-            // Eksekusi langsung buka link WhatsApp owner secara bersih
-            window.location.href = finalWaUrl;
+            // Langsung arahkan halaman ke link WhatsApp owner
+            window.location.href = cleanWaLink;
         }
         
         function cancelRedirectAndReset() {
