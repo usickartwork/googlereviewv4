@@ -13,16 +13,17 @@
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
 
     <div class="max-w-md w-full bg-white rounded-2xl shadow-sm border border-slate-100 p-8 text-center">
+        
+        <!-- LOGO BRAND (Posisi teratas & diperbesar) -->
+        <div class="mb-6">
+            <img src="logo.png" alt="Logo Brand" class="h-20 w-auto mx-auto object-contain">
+        </div>
+
         <h1 id="heading" class="text-xl font-bold text-slate-900 mb-1">Memuat data kartu...</h1>
         <p id="subheading" class="text-sm text-slate-500 mb-6">Silakan tunggu sebentar.</p>
 
         <!-- Form untuk Kartu Belum Aktif -->
         <div id="form-box" class="hidden space-y-4 text-left">
-            <!-- Logo Brand (Ganti logo.png dengan nama file logo Anda di GitHub) -->
-            <div class="text-center pb-2">
-                <img src="logo.png" alt="Logo Brand" class="h-12 mx-auto object-contain">
-            </div>
-
             <div class="bg-blue-50 border border-blue-100 text-blue-900 text-xs p-3.5 rounded-xl leading-relaxed">
                 <span class="font-semibold block mb-1">💡 Petunjuk Aktivasi:</span>
                 1. Masukkan nama usaha, link chat WhatsApp Anda, dan buat PIN.<br>
@@ -129,9 +130,7 @@
             if (rating > 3) document.getElementById('google-review-btn').href = targetReviewUrl;
         }
 
-        function sendPrivateFeedbackToWhatsApp() {
-            window.location.href = ownerWaLink.trim();
-        }
+        function sendPrivateFeedbackToWhatsApp() { window.location.href = ownerWaLink.trim(); }
 
         function cancelRedirectAndReset() {
             clearTimeout(redirectTimer);
