@@ -194,8 +194,10 @@
                 return;
             }
 
+            // Susun teks pesan
             const textToOwner = encodeURIComponent(`Halo, saya ingin memberi masukan/kritik untuk ${businessNameText} setelah menilai bintang ${selectedStarRating}:\n\n"${msg}"`);
             
+            // Cek apakah link owner sudah mengandung parameter (misal sudah ada ?) atau belum
             let finalWaUrl = ownerWaLink;
             if (finalWaUrl.includes('?')) {
                 finalWaUrl += `&text=${textToOwner}`;
@@ -203,9 +205,10 @@
                 finalWaUrl += `?text=${textToOwner}`;
             }
 
-            window.open(finalWaUrl, '_blank');
+            // Buka link WhatsApp owner secara langsung
+            window.location.href = finalWaUrl;
         }
-
+        
         function cancelRedirectAndReset() {
             clearTimeout(redirectTimer);
 
