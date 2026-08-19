@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aktivasi Kartu NFC Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+        <!-- Status / Loading -->
+        <h1 id="heading" class="text-xl font-bold text-gray-900 mb-2">Memuat data kartu...</h1>
+        <p id="subheading" class="text-sm text-gray-500 mb-6">Silakan tunggu sebentar.</p>
+
+        <!-- Form Aktivasi (Hidden by default) -->
+        <div id="form-box" class="hidden">
+            <p class="text-gray-600 text-sm mb-3">Masukkan Link Google Review Bisnis Anda:</p>
+            <input type="url" id="review-url" placeholder="https://g.page/r/..." class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="activateCard()" id="btn-activate" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 transition">
+                Aktifkan Kartu Sekarang
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // === GANTI LINK DI BAWAH INI DENGAN URL WEB APP APPS SCRIPT ANDA (/exec) ===
+        const SCRIPT_URL = https://script.google.com/macros/s/AKfycbxluaJjQ1bgB_2Oxbfho4ljJi9M0ATU5IVc4RjYsVDgLnAKYX53Ff5cHDv5yuDV_Upp/exec;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        if (!productId) {
+            document.getElementById('heading').textContent = "Product ID Tidak Ditemukan";
+            document.getElementById('subheading').textContent = "Gunakan format link yang benar, contoh: ?id=NFC-001";
+        } else {
+            document.getElementById('subheading').textContent = `Product ID: ${productId}`;
+
+            // Cek status ke Google Sheets via Apps Script
+            fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        if (res.data.status === "activated") {
+                            // Jika sudah aktif, langsung lempar ke Google Review pembeli
+                            window.location.replace(res.data.google_review_url);
+                        } else {
+                            // Jika belum aktif, tampilkan form input link
+                            document.getElementById('heading').textContent = "Aktifkan Kartu Anda";
+                            document.getElementById('form-box').classList.remove('hidden');
+                        }
+                    } else {
+                        document.getElementById('heading').textContent = "Kartu Tidak Terdaftar";
+                        document.getElementById('subheading').textContent = `ID "${productId}" tidak ditemukan di database.`;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('heading').textContent = "Kesalahan Koneksi";
+                    document.getElementById('subheading').textContent = "Gagal terhubung ke server database.";
+                });
+        }
+
+        // Fungsi saat tombol aktivasi diklik
+        function activateCard() {
+            const reviewUrl = document.getElementById('review-url').value.trim();
+            const btn = document.getElementById('btn-activate');
+
+            if (!reviewUrl) {
+                alert("Silakan masukkan URL Google Review terlebih dahulu!");
+                return;
+            }
+
+            btn.textContent = "Menyimpan...";
+            btn.disabled = true;
+
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ 
+                    action: "activate", 
+                    product_id: productId, 
+                    google_review_url: reviewUrl 
+                })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success || result.message === "Activated successfully") {
+                    alert("Berhasil diaktifkan! Mengalihkan ke Google Review...");
+                    window.location.replace(reviewUrl);
+                } else {
+                    alert("Gagal mengaktifkan data.");
+                    btn.textContent = "Aktifkan Kartu Sekarang";
+                    btn.disabled = false;
+                }
+            })
+            .catch(() => {
+                alert("Terjadi kesalahan jaringan.");
+                btn.textContent = "Aktifkan Kartu Sekarang";
+                btn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
