@@ -14,7 +14,7 @@
 
     <div class="max-w-md w-full bg-white rounded-2xl shadow-sm border border-slate-100 p-8 text-center">
         
-        <!-- LOGO BRAND (Besar & Paling Atas) -->
+        <!-- LOGO BRAND -->
         <div class="mb-6">
             <img src="logo.png" alt="Logo Brand" class="h-24 w-auto mx-auto object-contain">
         </div>
@@ -24,11 +24,14 @@
 
         <!-- Form Aktivasi -->
         <div id="form-box" class="hidden space-y-4 text-left">
+            <!-- KOTAK PETUNJUK (SUDAH KEMBALI) -->
             <div class="bg-blue-50 border border-blue-100 text-blue-900 text-xs p-3.5 rounded-xl leading-relaxed">
                 <span class="font-semibold block mb-1">💡 Petunjuk Aktivasi:</span>
                 1. Masukkan nama usaha, link WhatsApp Anda, dan buat PIN.<br>
-                2. Pastikan kolom link diisi dengan tautan yang valid (diawali https://).
+                2. Belum punya link review? <a href="https://productmate.com/google-review-link-generator" target="_blank" class="text-blue-600 underline font-semibold hover:text-blue-800">Klik di sini untuk Generate Link Review</a>.<br>
+                3. Pastikan kolom link diisi dengan tautan yang valid (diawali https://).
             </div>
+
             <input type="text" id="business-name" placeholder="Nama Bisnis / Usaha" class="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
             <input type="url" id="owner-wa-link" placeholder="Link WhatsApp (https://wa.me/...)" class="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
             <input type="url" id="review-url" placeholder="Link Google Review (https://...)" class="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
@@ -48,13 +51,11 @@
 
         <!-- Halaman Utama (Rating) -->
         <div id="rating-page" class="hidden space-y-6">
-            <!-- NAMA BISNIS BESAR -->
             <div class="text-center">
                 <h1 id="display-business" class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2"></h1>
                 <p class="text-xs text-slate-400 uppercase tracking-widest font-semibold">Berikan Ulasan Anda</p>
             </div>
 
-            <!-- Bintang -->
             <div class="flex justify-center gap-2" id="star-container">
                 <button onclick="handleRating(1)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
                 <button onclick="handleRating(2)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
@@ -63,7 +64,6 @@
                 <button onclick="handleRating(5)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
             </div>
 
-            <!-- Opsi Feedback Privat -->
             <div id="bad-review-section" class="hidden space-y-3 text-left bg-slate-50 border border-slate-200 p-4 rounded-2xl">
                 <p class="text-xs font-semibold text-slate-700">Mohon maaf, apa yang bisa diperbaiki?</p>
                 <textarea id="feedback-msg" rows="3" placeholder="Tulis masukan Anda..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none bg-white"></textarea>
@@ -72,7 +72,6 @@
                 </button>
             </div>
 
-            <!-- Opsi Google Review -->
             <div id="good-review-section" class="hidden space-y-3 text-center bg-blue-50/50 border border-blue-100 p-4 rounded-2xl">
                 <p class="text-xs font-semibold text-blue-900">Terima kasih atas penilaian positif Anda!</p>
                 <a id="google-review-btn" href="#" target="_blank" class="block w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition font-semibold shadow-sm">
