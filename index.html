@@ -194,19 +194,27 @@
                 return;
             }
 
-            // Susun teks pesan
+            // Susun teks pesan ulasan
             const textToOwner = encodeURIComponent(`Halo, saya ingin memberi masukan/kritik untuk ${businessNameText} setelah menilai bintang ${selectedStarRating}:\n\n"${msg}"`);
             
-            // Cek apakah link owner sudah mengandung parameter (misal sudah ada ?) atau belum
-            let finalWaUrl = ownerWaLink;
-            if (finalWaUrl.includes('?')) {
-                finalWaUrl += `&text=${textToOwner}`;
+            // Ambil link WhatsApp owner yang tersimpan di database
+            let cleanWaLink = ownerWaLink.trim();
+
+            // Jika link owner sudah mengandung parameter, tambahkan dengan &text=, jika belum pakai ?text=
+            if (cleanWaLink.includes('?')) {
+                cleanWaLink += `&text=${textToOwner}`;
             } else {
-                finalWaUrl += `?text=${textToOwner}`;
+                cleanWaLink += `?text=${textToOwner}`;
             }
 
-            // Buka link WhatsApp owner secara langsung
-            window.location.href = finalWaUrl;
+            // Gunakan tag <a> tiruan atau arahkan secara mutlak agar browser membukanya sebagai URL eksternal murni
+            const a = document.createElement('a');
+            a.href = cleanWaLink;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
         
         function cancelRedirectAndReset() {
