@@ -187,34 +187,27 @@
             }
         }
 
-        function sendPrivateFeedbackToWhatsApp() {
+       function sendPrivateFeedbackToWhatsApp() {
+            // Ambil pesan dari kotak (hanya sebagai formalitas/catatan pelanggan)
             const msg = document.getElementById('feedback-msg').value.trim();
-            if (!msg) {
-                alert("Mohon tuliskan pesan atau masukan terlebih dahulu.");
-                return;
-            }
-
-            // Susun teks pesan ulasan
-            const textToOwner = encodeURIComponent(`Halo, saya ingin memberi masukan/kritik untuk ${businessNameText} setelah menilai bintang ${selectedStarRating}:\n\n"${msg}"`);
             
-            // Ambil link WhatsApp owner yang tersimpan di database
-            let cleanWaLink = ownerWaLink.trim();
+            // Langsung gunakan link WhatsApp owner yang bersih dari database
+            let finalWaUrl = ownerWaLink.trim();
 
-            // Jika link owner sudah mengandung parameter, tambahkan dengan &text=, jika belum pakai ?text=
-            if (cleanWaLink.includes('?')) {
-                cleanWaLink += `&text=${textToOwner}`;
-            } else {
-                cleanWaLink += `?text=${textToOwner}`;
+            // Jika pelanggan sempat mengetik pesan, kita coba sisipkan sebagai teks otomatis. 
+            // Jika kosong, langsung buka link chat bersih milik owner.
+            if (msg) {
+                const textToOwner = encodeURIComponent(`Halo, saya ingin memberi masukan/kritik untuk ${businessNameText} setelah menilai bintang ${selectedStarRating}:\n\n"${msg}"`);
+                
+                if (finalWaUrl.includes('?')) {
+                    finalWaUrl += `&text=${textToOwner}`;
+                } else {
+                    finalWaUrl += `?text=${textToOwner}`;
+                }
             }
 
-            // Gunakan tag <a> tiruan atau arahkan secara mutlak agar browser membukanya sebagai URL eksternal murni
-            const a = document.createElement('a');
-            a.href = cleanWaLink;
-            a.target = '_blank';
-            a.rel = 'noopener noreferrer';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            // Eksekusi langsung buka link WhatsApp owner secara bersih
+            window.location.href = finalWaUrl;
         }
         
         function cancelRedirectAndReset() {
