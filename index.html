@@ -8,13 +8,12 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
 
-    <div class="max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-        <!-- Judul bisa diklik 5 kali untuk memunculkan menu rahasia -->
-        <h1 id="heading" onclick="handleSecretClick()" class="text-xl font-bold text-gray-900 mb-1 text-center cursor-pointer select-none" title="Ketuk beberapa kali jika ingin mengubah data">Memuat data kartu...</h1>
-        <p id="subheading" class="text-sm text-gray-500 mb-6 text-center">Silakan tunggu sebentar.</p>
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+        <h1 id="heading" class="text-xl font-bold text-gray-900 mb-1">Memuat data kartu...</h1>
+        <p id="subheading" class="text-sm text-gray-500 mb-6">Silakan tunggu sebentar.</p>
 
         <!-- Form untuk Kartu Belum Aktif -->
-        <div id="form-box" class="hidden space-y-4">
+        <div id="form-box" class="hidden space-y-4 text-left">
             <div class="bg-blue-50 border border-blue-200 text-blue-800 text-xs p-3 rounded-lg leading-relaxed">
                 <span class="font-semibold block mb-1">💡 Petunjuk Aktivasi:</span>
                 1. Masukkan nama usaha dan buat <strong>PIN rahasia</strong> (untuk keamanan saat ingin mereset/mengubah data nanti).<br>
@@ -43,23 +42,18 @@
             </button>
         </div>
 
-        <!-- Tampilan Jika Kartu Sudah Aktif -->
-        <div id="active-box" class="hidden space-y-4 text-center">
+        <!-- Tampilan Transisi Kartu Sudah Aktif (Muncul 2 Detik sebelum Redirect) -->
+        <div id="active-box" class="hidden space-y-4">
             <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs p-3 rounded-lg">
-                <span class="font-semibold block mb-1">✅ Kartu Sudah Aktif</span>
-                Terdaftar untuk: <strong id="display-business" class="block text-sm mt-1"></strong>
+                <span class="font-semibold block mb-1">🚀 Mengalihkan ke Ulasan...</span>
+                <span id="display-business" class="font-medium text-sm"></span>
             </div>
 
-            <div class="space-y-2 pt-2">
-                <a id="btn-visit" href="#" target="_blank" class="block w-full bg-emerald-600 text-white font-medium py-2.5 rounded-lg hover:bg-emerald-700 transition text-sm font-semibold shadow-sm">
-                    🚀 Berikan Ulasan Sekarang
-                </a>
-                
-                <!-- Tombol Reset Sembunyikan secara Default -->
-                <button onclick="resetCard()" id="btn-reset" class="hidden w-full bg-gray-100 text-red-600 border border-red-200 font-medium py-2 rounded-lg hover:bg-red-50 transition text-xs">
-                    🔄 Mode Pemilik: Reset / Ubah Data Kartu
-                </button>
-            </div>
+            <p class="text-xs text-gray-400">Otomatis beralih dalam <span id="countdown" class="font-bold text-gray-600">2</span> detik...</p>
+
+            <button onclick="cancelRedirectAndReset()" class="w-full bg-gray-100 text-red-600 border border-red-200 font-medium py-2 rounded-lg hover:bg-red-50 transition text-xs">
+                🔄 Ingin Reset / Ubah Data Kartu Ini?
+            </button>
         </div>
     </div>
 
@@ -68,7 +62,9 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
-        let secretClickCount = 0; // Penghitung ketukan rahasia
+        let redirectTimer;
+        let countdownTimer;
+        let targetReviewUrl = "";
 
         if (!productId) {
             document.getElementById('heading').textContent = "Product ID Tidak Ditemukan";
@@ -81,10 +77,25 @@
                 .then(res => {
                     if (res.success) {
                         if (res.data.status === "activated") {
-                            document.getElementById('heading').textContent = "Status Kartu";
-                            document.getElementById('display-business').textContent = res.data.business_name || "Bisnis Terdaftar";
-                            document.getElementById('btn-visit').href = res.data.google_review_url;
+                            targetReviewUrl = res.data.google_review_url;
+                            document.getElementById('heading').textContent = "Mengarahkan...";
+                            document.getElementById('display-business').textContent = res.data.business_name || "Bisnis";
                             document.getElementById('active-box').classList.remove('hidden');
+
+                            // Hitung mundur 2 detik sebelum pindah otomatis
+                            let timeLeft = 2;
+                            countdownTimer = setInterval(() => {
+                                timeLeft--;
+                                if (timeLeft >= 0) {
+                                    document.getElementById('countdown').textContent = timeLeft;
+                                }
+                            }, 1000);
+
+                            // Eksekusi pindah otomatis setelah 2 detik
+                            redirectTimer = setTimeout(() => {
+                                window.location.replace(targetReviewUrl);
+                            }, 2000);
+
                         } else {
                             document.getElementById('heading').textContent = "Aktifkan Kartu Anda";
                             document.getElementById('form-box').classList.remove('hidden');
@@ -100,17 +111,41 @@
                 });
         }
 
-        // Trik Rahasia: Ketuk tulisan "Status Kartu" sebanyak 5 kali untuk memunculkan tombol reset
-        function handleSecretClick() {
-            const activeBox = document.getElementById('active-box');
-            // Hanya aktif jika kartu dalam kondisi sudah aktif
-            if (!activeBox.classList.contains('hidden')) {
-                secretClickCount++;
-                if (secretClickCount === 5) {
-                    document.getElementById('btn-reset').classList.remove('hidden');
-                    alert("Menu pemilik terbuka!");
-                }
+        // Jika tombol batal/reset ditekan selama waktu 2 detik
+        function cancelRedirectAndReset() {
+            // Batalkan otomatis pindah halaman
+            clearTimeout(redirectTimer);
+            clearInterval(countdownTimer);
+
+            // Minta PIN untuk reset
+            const inputPin = prompt("Masukkan PIN keamanan kartu ini untuk mereset/mengubah data:");
+            if (inputPin === null) {
+                // Jika dibatalkan prompt-nya, lanjutkan redirect
+                window.location.replace(targetReviewUrl);
+                return;
             }
+
+            if (!inputPin.trim()) {
+                alert("PIN tidak boleh kosong!");
+                window.location.replace(targetReviewUrl);
+                return;
+            }
+
+            fetch(`${SCRIPT_URL}?action=reset&product_id=${productId}&pin=${encodeURIComponent(inputPin)}`)
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        alert("PIN benar! Kartu berhasil direset.");
+                        location.reload();
+                    } else {
+                        alert("Gagal: " + (result.message || "PIN salah!"));
+                        window.location.replace(targetReviewUrl);
+                    }
+                })
+                .catch(() => {
+                    alert("Terjadi kesalahan jaringan.");
+                    window.location.replace(targetReviewUrl);
+                });
         }
 
         // Fungsi Aktivasi Kartu
@@ -121,7 +156,7 @@
             const btn = document.getElementById('btn-activate');
 
             if (!businessName || !reviewUrl || !cardPin) {
-                alert("Mohon lengkapi semua kolom (Nama Bisnis, Link Review, dan PIN)!");
+                alert("Mohon lengkapi semua kolom!");
                 return;
             }
 
@@ -154,39 +189,6 @@
                 btn.textContent = "Aktifkan Kartu Sekarang";
                 btn.disabled = false;
             });
-        }
-
-        // Fungsi Reset Kartu dengan PIN
-        function resetCard() {
-            const inputPin = prompt("Masukkan PIN keamanan kartu ini untuk mereset/mengubah data:");
-            if (inputPin === null) return;
-
-            if (!inputPin.trim()) {
-                alert("PIN tidak boleh kosong!");
-                return;
-            }
-
-            const btnReset = document.getElementById('btn-reset');
-            btnReset.textContent = "Memverifikasi PIN...";
-            btnReset.disabled = true;
-
-            fetch(`${SCRIPT_URL}?action=reset&product_id=${productId}&pin=${encodeURIComponent(inputPin)}`)
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        alert("PIN benar! Kartu berhasil direset.");
-                        location.reload();
-                    } else {
-                        alert("Gagal: " + (result.message || "PIN yang Anda masukkan salah!"));
-                        btnReset.textContent = "🔄 Mode Pemilik: Reset / Ubah Data Kartu";
-                        btnReset.disabled = false;
-                    }
-                })
-                .catch(() => {
-                    alert("Terjadi kesalahan jaringan saat verifikasi PIN.");
-                    btnReset.textContent = "🔄 Mode Pemilik: Reset / Ubah Data Kartu";
-                    btnReset.disabled = false;
-                });
         }
     </script>
 </body>
