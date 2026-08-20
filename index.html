@@ -39,14 +39,10 @@
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Link Google Review</label>
                 <input type="url" id="review-url" placeholder="https://search.google.com/..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
                 
-                <div class="mt-2 bg-blue-50/70 border border-blue-100 p-3 rounded-xl space-y-2">
-                    <p class="text-[11px] text-blue-900 leading-relaxed">
-                        Belum punya link review google? Klik tombol di bawah untuk convert link gmaps menjadi link google review yang valid.
-                    </p>
-                    <a href="https://productmate.com/google-review-link-generator" target="_blank" class="block w-full text-center bg-blue-600 text-white font-medium py-2 rounded-lg text-xs hover:bg-blue-700 transition shadow-sm">
-                        🪄 Convert Link Gmaps ke Google Review
-                    </a>
-                </div>
+                <!-- Teks Bantuan Minimalis -->
+                <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                    Belum punya link? <a href="https://productmate.com/google-review-link-generator" target="_blank" class="text-blue-600 underline font-medium hover:text-blue-800">Convert link gmaps ke Google Review di sini</a>.
+                </p>
             </div>
 
             <div>
@@ -109,7 +105,6 @@
         } else {
             document.getElementById('logo-box').classList.add('hidden');
 
-            // Eksekusi fetch data lebih cepat tanpa fungsi tambahan yang memberatkan
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
                 .then(res => res.json())
                 .then(res => {
@@ -178,7 +173,7 @@
             const reviewUrl = document.getElementById('review-url').value.trim();
 
             if (!reviewUrl.startsWith("https://search.google.com/")) {
-                alert("Link Google Review tidak valid!\n\nPastikan Anda menggunakan link dari ProductMate yang diawali dengan 'https://search.google.com/'.");
+                alert("Link Google Review tidak valid!\n\nPastikan Anda menggunakan link resmi dari ProductMate yang diawali dengan 'https://search.google.com/'.");
                 document.getElementById('review-url').focus();
                 return;
             }
