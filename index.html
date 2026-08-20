@@ -16,14 +16,13 @@
         .star-btn:hover { transform: scale(1.25); }
         .star-active { transform: scale(1.3); }
         
-        /* Animasi Geser & Pudar yang Jauh Lebih Lambat (0.9s) dan Sangat Halus */
-        @keyframes slowSlideAppear {
-            0% { opacity: 0; transform: translateY(20px); max-height: 0; padding-top: 0; padding-bottom: 0; }
-            100% { opacity: 1; transform: translateY(0); max-height: 300px; padding-top: 1rem; padding-bottom: 1rem; }
+        /* Animasi Lembut Naik dari Bawah (Slide Up & Fade) untuk Konten Bawah */
+        @keyframes slideUpSmooth {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
-        .animate-slow-slide {
-            animation: slowSlideAppear 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            overflow: hidden;
+        .animate-slide-up {
+            animation: slideUpSmooth 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         /* Animasi Pop-up Bounce Kenyal untuk Emotikon */
@@ -133,32 +132,21 @@
                 <button onclick="handleRating(5)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
             </div>
 
-            <!-- Opsi Feedback Privat (Bintang 1-3) -->
-            <div id="bad-review-section" class="hidden space-y-3 text-left bg-blue-50/40 border border-blue-100 p-4 rounded-2xl animate-slow-slide">
-                <p class="text-xs font-semibold text-slate-700">Mohon maaf, apa yang bisa diperbaiki?</p>
-                <textarea id="feedback-msg" rows="3" placeholder="Tulis masukan Anda..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none bg-white"></textarea>
-                <button onclick="triggerSuccessAnimation('whatsapp')" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition shadow-sm">
-                    💬 Kirim Masukan ke WhatsApp Owner
-                </button>
-            </div>
-
-            <!-- Opsi Google Review (Bintang 4-5) -->
-            <div id="good-review-section" class="hidden space-y-3 text-center bg-blue-50/60 border border-blue-100 p-4 rounded-2xl animate-slow-slide">
-                <p class="text-xs font-semibold text-blue-900">Terima kasih atas penilaian positif Anda!</p>
-                <button onclick="triggerSuccessAnimation('google')" class="block w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition font-semibold shadow-sm">
-                    ⭐ Kirim Ulasan Anda
-                </button>
+            <!-- KONTINUER DINAMIS TUNGGAL UNTUK BAGIAN BAWAH (Smooth Slide Up dari Bawah) -->
+            <div id="dynamic-bottom-section" class="hidden opacity-0 bg-blue-50/50 border border-blue-100 p-4 rounded-2xl">
+                <!-- Konten akan diisi otomatis lewat JavaScript dengan efek halus -->
             </div>
         </div>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrDzMoosfaQu-CT4wnw7avyWFusNpw2ylo4IWmYbO53021t_20FGx5La8YP9Rds0Ym/exec";
+        const SCRIPT_URL = "URL_EXEC_ANDA_DISINI";
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
         let targetReviewUrl = "", ownerWaLink = "", selectedStarRating = 0;
         let secretClickCount = 0;
         let secretClickTimer = null;
+        let lastRatingCategory = null; // Melacak kategori (low/high) agar animasi slide up hanya muncul saat berpindah kategori
 
         const reactionEmojis = {
             1: "😞",
@@ -251,16 +239,41 @@
                 }
             });
 
-            // Animasi Geser & Pudar Perlahan (Slow Slide) pada Bagian Bawah
-            const badSection = document.getElementById('bad-review-section');
-            const goodSection = document.getElementById('good-review-section');
+            // Tentukan kategori baru: 'low' (1-3) atau 'high' (4-5)
+            const currentCategory = rating <= 3 ? 'low' : 'high';
+            const bottomSection = document.getElementById('dynamic-bottom-section');
 
-            if (rating <= 3) {
-                goodSection.classList.add('hidden');
-                badSection.classList.remove('hidden');
-            } else {
-                badSection.classList.add('hidden');
-                goodSection.classList.remove('hidden');
+            // Jika kategori berubah (misal dari 3 bintang ke 4 bintang), jalankan animasi slide-up yang lembut dari bawah
+            if (lastRatingCategory !== currentCategory) {
+                lastRatingCategory = currentCategory;
+                
+                bottomSection.classList.remove('animate-slide-up');
+                bottomSection.style.opacity = '0';
+
+                setTimeout(() => {
+                    if (currentCategory === 'low') {
+                        bottomSection.innerHTML = `
+                            <div class="space-y-3 text-left">
+                                <p class="text-xs font-semibold text-slate-700">Mohon maaf, apa yang bisa diperbaiki?</p>
+                                <textarea id="feedback-msg" rows="3" placeholder="Tulis masukan Anda..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none bg-white"></textarea>
+                                <button onclick="triggerSuccessAnimation('whatsapp')" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition shadow-sm">
+                                    💬 Kirim Masukan ke WhatsApp Owner
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        bottomSection.innerHTML = `
+                            <div class="space-y-3 text-center">
+                                <p class="text-xs font-semibold text-blue-900">Terima kasih atas penilaian positif Anda!</p>
+                                <button onclick="triggerSuccessAnimation('google')" class="block w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition font-semibold shadow-sm">
+                                    ⭐ Kirim Ulasan Anda
+                                </button>
+                            </div>
+                        `;
+                    }
+                    bottomSection.classList.remove('hidden');
+                    bottomSection.classList.add('animate-slide-up');
+                }, 150);
             }
 
             // Efek Confetti jika bintang 4 atau 5
