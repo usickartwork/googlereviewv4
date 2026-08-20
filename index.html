@@ -100,7 +100,7 @@
                 <p class="text-[11px] text-blue-600 uppercase tracking-widest font-bold pt-1">Berikan Ulasan Anda</p>
             </div>
 
-            <!-- EMOTIKON REAKSI (Disembunyikan awalnya, muncul mulus saat bintang diklik) -->
+            <!-- EMOTIKON REAKSI -->
             <div id="emoji-reaction" class="text-4xl h-0 opacity-0 overflow-hidden flex items-center justify-center transform scale-50">
                 😊
             </div>
@@ -140,6 +140,7 @@
         let targetReviewUrl = "", ownerWaLink = "", selectedStarRating = 0;
         let secretClickCount = 0;
         let secretClickTimer = null;
+        let audioCtx = null; // Menyimpan konteks audio
 
         const reactionEmojis = {
             1: "😞",
@@ -184,6 +185,37 @@
                 });
         }
 
+        // Fungsi Memutar Efek Suara Pop Menggunakan Web Audio API
+        function playPopSound() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                // Nada efek pop pendek yang ceria
+                osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } catch (e) {
+                // Mencegah error jika tidak didukung
+            }
+        }
+
         function handleSecretResetClick() {
             secretClickCount++;
             if (secretClickTimer) clearTimeout(secretClickTimer);
@@ -213,7 +245,10 @@
         function handleRating(rating) {
             selectedStarRating = rating;
             
-            // Tampilkan dan perbarui Emoji Reaksi secara mulus saat pertama kali/setiap kali diklik
+            // Panggil efek suara klik
+            playPopSound();
+
+            // Tampilkan dan perbarui Emoji Reaksi secara mulus
             const emojiEl = document.getElementById('emoji-reaction');
             emojiEl.textContent = reactionEmojis[rating] || "😊";
             emojiEl.className = "text-4xl h-12 opacity-100 flex items-center justify-center transform scale-100 transition-all duration-300";
