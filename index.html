@@ -12,10 +12,10 @@
 </head>
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-0 md:p-4">
 
-    <!-- Container Utama: Card untuk Aktivasi, Full-Frame untuk Halaman Ulasan -->
+    <!-- Container Utama -->
     <div id="main-container" class="w-full max-w-md min-h-screen md:min-h-0 bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center">
         
-        <!-- LOGO BRAND (Hanya tampil di halaman aktivasi / memuat) -->
+        <!-- LOGO BRAND (Hanya tampil saat form aktivasi) -->
         <div id="logo-box" class="mb-6">
             <img src="logo.png" alt="Logo Brand" class="h-24 w-auto mx-auto object-contain">
         </div>
@@ -23,7 +23,7 @@
         <h1 id="heading" class="text-xl font-bold text-slate-900 mb-1">Memuat data kartu...</h1>
         <p id="subheading" class="text-sm text-slate-500 mb-6">Silakan tunggu sebentar.</p>
 
-        <!-- Form Aktivasi (Urutan: Label/Nama Bisnis di Atas, Kolom di Bawah) -->
+        <!-- Form Aktivasi -->
         <div id="form-box" class="hidden space-y-4 text-left">
             <div class="bg-blue-50 border border-blue-100 text-blue-900 text-xs p-3.5 rounded-xl leading-relaxed">
                 <span class="font-semibold block mb-1">💡 Petunjuk Aktivasi:</span>
@@ -56,19 +56,11 @@
             </button>
         </div>
 
-        <!-- Tombol Reset (1 Detik) -->
-        <div id="transition-box" class="hidden space-y-4">
-            <p class="text-xs text-slate-400">Mempersiapkan halaman ulasan dalam <span id="countdown" class="font-bold text-slate-600">1</span> detik...</p>
-            <button onclick="cancelRedirectAndReset()" class="w-full bg-slate-100 text-rose-600 border border-rose-200 font-medium py-2 rounded-xl hover:bg-rose-50 transition text-xs">
-                🔄 Ingin Reset / Ubah Data Kartu Ini?
-            </button>
-        </div>
-
         <!-- Halaman Utama (Rating - Full Frame Vertikal & Beraksen Biru) -->
         <div id="rating-page" class="hidden space-y-6">
             
-            <!-- Aksen Garis Biru Elegan & Nama Bisnis -->
-            <div class="text-center space-y-2">
+            <!-- Aksen Garis Biru Elegan & Nama Bisnis (Klik 5x untuk Reset) -->
+            <div class="text-center space-y-2 cursor-pointer select-none" onclick="handleSecretResetClick()" title="Ketuk 5 kali untuk ubah data">
                 <div class="w-10 h-1 bg-blue-600 mx-auto rounded-full mb-3"></div>
                 <h1 id="display-business" class="text-3xl font-extrabold text-slate-900 tracking-tight"></h1>
                 <p class="text-xs text-blue-600 uppercase tracking-widest font-bold">Berikan Ulasan Anda</p>
@@ -106,11 +98,18 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrDzMoosfaQu-CT4wnw7avyWFusNpw2ylo4IWmYbO53021t_20FGx5La8YP9Rds0Ym/exec";
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
-        let targetReviewUrl = "", ownerWaLink = "", redirectTimer, selectedStarRating = 0;
+        let targetReviewUrl = "", ownerWaLink = "", selectedStarRating = 0;
+        let secretClickCount = 0;
+        let secretClickTimer = null;
 
         if (!productId) {
+            document.getElementById('logo-box').classList.add('hidden');
             document.getElementById('heading').textContent = "Product ID Tidak Ditemukan";
+            document.getElementById('subheading').textContent = "Gunakan format link yang benar.";
         } else {
+            // Saat memuat, sembunyikan logo supaya halaman loading bersih tanpa logo
+            document.getElementById('logo-box').classList.add('hidden');
+
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
                 .then(res => res.json())
                 .then(res => {
@@ -118,30 +117,68 @@
                         targetReviewUrl = res.data.google_review_url;
                         ownerWaLink = res.data.whatsapp_link;
                         
-                        // Sembunyikan logo gambar & header standar
-                        document.getElementById('logo-box').classList.add('hidden');
+                        // Sembunyikan heading memuat
                         document.getElementById('heading').classList.add('hidden');
                         document.getElementById('subheading').classList.add('hidden');
                         
-                        // Ubah container menjadi full-frame vertikal khusus halaman ulasan
+                        // Ubah container menjadi full-frame vertikal
                         const container = document.getElementById('main-container');
                         container.className = "w-full max-w-md min-h-screen bg-white p-6 sm:p-8 text-center flex flex-col justify-center";
 
                         // Tampilkan halaman ulasan
                         document.getElementById('rating-page').classList.remove('hidden');
-                        document.getElementById('transition-box').classList.remove('hidden');
                         document.getElementById('display-business').textContent = res.data.business_name;
-                        
-                        redirectTimer = setTimeout(() => { document.getElementById('transition-box').classList.add('hidden'); }, 1000);
                     } else {
+                        // Jika belum aktif, tampilkan kembali logo di form aktivasi
+                        document.getElementById('logo-box').classList.remove('hidden');
                         document.getElementById('form-box').classList.remove('hidden');
                         document.getElementById('heading').textContent = "Aktifkan Kartu Anda";
+                        document.getElementById('subheading').textContent = "Silakan lengkapi data di bawah ini.";
                     }
                 })
                 .catch(() => {
                     document.getElementById('heading').textContent = "Kesalahan Koneksi";
                     document.getElementById('subheading').textContent = "Gagal terhubung ke server database.";
                 });
+        }
+
+        // Fungsi Gestur Rahasia: Ketuk nama bisnis 5 kali untuk memunculkan reset PIN
+        function handleSecretResetClick() {
+            secretClickCount++;
+            
+            if (secretClickTimer) clearTimeout(secretClickTimer);
+
+            // Jika dalam waktu 2 detik tidak mencapai 5 ketukan, reset hitungan
+            secretClickTimer = setTimeout(() => {
+                secretClickCount = 0;
+            }, 2000);
+
+            if (secretClickCount >= 5) {
+                secretClickCount = 0;
+                clearTimeout(secretClickTimer);
+                
+                const pin = prompt("🔐 Menu Reset Data Kartu\nMasukkan PIN keamanan kartu ini:");
+                if (pin === null) return;
+
+                if (!pin.trim()) {
+                    alert("PIN tidak boleh kosong!");
+                    return;
+                }
+
+                fetch(`${SCRIPT_URL}?action=reset&product_id=${productId}&pin=${encodeURIComponent(pin)}`)
+                    .then(res => res.json())
+                    .then(result => {
+                        if (result.success) {
+                            alert("PIN benar! Kartu berhasil direset.");
+                            location.reload();
+                        } else {
+                            alert("Gagal: " + (result.message || "PIN salah!"));
+                        }
+                    })
+                    .catch(() => {
+                        alert("Terjadi kesalahan jaringan.");
+                    });
+            }
         }
 
         function handleRating(rating) {
@@ -153,12 +190,6 @@
         }
 
         function sendPrivateFeedbackToWhatsApp() { window.location.href = ownerWaLink.trim(); }
-
-        function cancelRedirectAndReset() {
-            clearTimeout(redirectTimer);
-            const pin = prompt("Masukkan PIN:");
-            if (pin) fetch(`${SCRIPT_URL}?action=reset&product_id=${productId}&pin=${encodeURIComponent(pin)}`).then(() => location.reload());
-        }
 
         function activateCard() {
             const data = { action: "activate", product_id: productId, google_review_url: document.getElementById('review-url').value, business_name: document.getElementById('business-name').value, pin: document.getElementById('card-pin').value, whatsapp_link: document.getElementById('owner-wa-link').value };
