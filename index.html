@@ -8,32 +8,32 @@
     <!-- Library Ringan untuk Efek Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* Transisi Universal yang Halus untuk Semua Elemen */
+        /* Transisi Universal yang Dibuat Lebih Lambat & Lembut (0.6s) */
         * {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .star-btn { transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease; }
-        .star-btn:hover { transform: scale(1.2); }
-        .star-active { transform: scale(1.25); }
+        .star-btn { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease; }
+        .star-btn:hover { transform: scale(1.25); }
+        .star-active { transform: scale(1.3); }
         
-        /* Animasi Muncul Halus (Smooth Slide Down & Fade) */
+        /* Animasi Muncul Lebih Lambat, Anggun, dan Mulus */
         @keyframes smoothAppear {
-            from { opacity: 0; transform: translateY(-12px); max-height: 0; }
+            from { opacity: 0; transform: translateY(-16px); max-height: 0; }
             to { opacity: 1; transform: translateY(0); max-height: 300px; }
         }
         .animate-smooth-appear {
-            animation: smoothAppear 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: smoothAppear 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             overflow: hidden;
         }
 
-        /* Animasi Pop-up Sukses */
+        /* Animasi Pop-up Sukses Lebih Lembut */
         @keyframes popUp {
-            0% { transform: scale(0.8); opacity: 0; }
+            0% { transform: scale(0.85); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
         .animate-pop-up {
-            animation: popUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            animation: popUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
     </style>
 </head>
@@ -134,13 +134,12 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrDzMoosfaQu-CT4wnw7avyWFusNpw2ylo4IWmYbO53021t_20FGx5La8YP9Rds0Ym/exec";
+        const SCRIPT_URL = "URL_EXEC_ANDA_DISINI";
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
         let targetReviewUrl = "", ownerWaLink = "", selectedStarRating = 0;
         let secretClickCount = 0;
         let secretClickTimer = null;
-        let audioCtx = null; // Menyimpan konteks audio
 
         const reactionEmojis = {
             1: "😞",
@@ -185,37 +184,6 @@
                 });
         }
 
-        // Fungsi Memutar Efek Suara Pop Menggunakan Web Audio API
-        function playPopSound() {
-            try {
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-
-                osc.type = 'sine';
-                // Nada efek pop pendek yang ceria
-                osc.frequency.setValueAtTime(450, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
-
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.1);
-            } catch (e) {
-                // Mencegah error jika tidak didukung
-            }
-        }
-
         function handleSecretResetClick() {
             secretClickCount++;
             if (secretClickTimer) clearTimeout(secretClickTimer);
@@ -245,13 +213,10 @@
         function handleRating(rating) {
             selectedStarRating = rating;
             
-            // Panggil efek suara klik
-            playPopSound();
-
-            // Tampilkan dan perbarui Emoji Reaksi secara mulus
+            // Tampilkan dan perbarui Emoji Reaksi dengan transisi lembut
             const emojiEl = document.getElementById('emoji-reaction');
             emojiEl.textContent = reactionEmojis[rating] || "😊";
-            emojiEl.className = "text-4xl h-12 opacity-100 flex items-center justify-center transform scale-100 transition-all duration-300";
+            emojiEl.className = "text-4xl h-12 opacity-100 flex items-center justify-center transform scale-100 transition-all duration-500";
 
             // Perbarui warna bintang
             document.querySelectorAll('.star-btn').forEach((s, i) => {
@@ -262,7 +227,7 @@
                 }
             });
 
-            // Tampilkan section berdasarkan rating dengan animasi halus
+            // Tampilkan section berdasarkan rating dengan animasi melandai
             const badSection = document.getElementById('bad-review-section');
             const goodSection = document.getElementById('good-review-section');
 
@@ -309,7 +274,7 @@
                 } else {
                     window.location.href = ownerWaLink.trim();
                 }
-            }, 1200);
+            }, 1400);
         }
 
         function activateCard() {
