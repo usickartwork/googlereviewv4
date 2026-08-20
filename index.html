@@ -34,6 +34,15 @@
             animation: ultraSmoothFadeOut 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
 
+        /* Animasi Putar Spinner Loading */
+        @keyframes spinLoader {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .animate-spinner {
+            animation: spinLoader 0.9s linear infinite;
+        }
+
         /* Animasi Pop-up Bounce Kenyal untuk Emotikon */
         @keyframes emojiBounce {
             0% { transform: scale(0.4); opacity: 0; }
@@ -83,8 +92,12 @@
             <img src="logo.png" alt="Logo Brand" class="h-24 w-auto mx-auto object-contain">
         </div>
 
-        <h1 id="heading" class="text-xl font-bold text-slate-900 mb-1">Memuat...</h1>
-        <p id="subheading" class="text-sm text-slate-500 mb-6">Mohon tunggu sebentar.</p>
+        <!-- INDIKATOR LOADING ELEGAN -->
+        <div id="loading-box" class="flex flex-col items-center justify-center space-y-3 py-6">
+            <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spinner"></div>
+            <h1 id="heading" class="text-base font-semibold text-slate-800">Memuat halaman...</h1>
+            <p id="subheading" class="text-xs text-slate-400">Mohon tunggu sebentar.</p>
+        </div>
 
         <!-- Form Aktivasi -->
         <div id="form-box" class="hidden space-y-4 text-left">
@@ -141,8 +154,8 @@
                 <button onclick="handleRating(5)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
             </div>
 
-            <!-- KONTINER DINAMIS DENGAN PADDING LEBIH RINGKAS & MIN-HEIGHT PAS -->
-            <div id="dynamic-bottom-section" class="opacity-0 min-h-[140px] bg-blue-50/50 border border-blue-100 p-3.5 rounded-2xl flex flex-col justify-center">
+            <!-- KONTINER DINAMIS TANPA BORDER (Clean & Minimalist) -->
+            <div id="dynamic-bottom-section" class="opacity-0 min-h-[140px] bg-blue-50/30 p-3.5 rounded-2xl flex flex-col justify-center">
                 <p class="text-xs text-slate-400 italic">Ketuk bintang di atas untuk memberi penilaian...</p>
             </div>
         </div>
@@ -166,20 +179,25 @@
         };
 
         if (!productId) {
+            document.getElementById('loading-box').classList.add('hidden');
             document.getElementById('logo-box').classList.remove('hidden');
             document.getElementById('heading').textContent = "Product ID Tidak Ditemukan";
+            document.getElementById('heading').className = "text-xl font-bold text-slate-900 mb-1";
             document.getElementById('subheading').textContent = "Gunakan format link yang benar.";
         } else {
-            fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
+            // Menggunakan AbortController untuk timeout fetch agar lebih cepat merespons
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+            fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`, { signal: controller.signal })
                 .then(res => res.json())
                 .then(res => {
+                    clearTimeout(timeoutId);
+                    document.getElementById('loading-box').classList.add('hidden');
+
                     if (res.success && res.data.status === "activated") {
                         targetReviewUrl = res.data.google_review_url;
                         ownerWaLink = res.data.whatsapp_link;
-                        
-                        document.getElementById('logo-box').classList.add('hidden');
-                        document.getElementById('heading').classList.add('hidden');
-                        document.getElementById('subheading').classList.add('hidden');
                         
                         const container = document.getElementById('main-container');
                         container.className = "w-full max-w-md min-h-screen md:min-h-0 bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center relative overflow-hidden";
@@ -192,14 +210,13 @@
                     } else {
                         document.getElementById('logo-box').classList.remove('hidden');
                         document.getElementById('form-box').classList.remove('hidden');
-                        document.getElementById('heading').textContent = "Aktifkan Kartu Anda";
-                        document.getElementById('subheading').textContent = "Silakan lengkapi data di bawah ini.";
                     }
                 })
                 .catch(() => {
+                    clearTimeout(timeoutId);
+                    document.getElementById('loading-box').classList.add('hidden');
                     document.getElementById('logo-box').classList.remove('hidden');
-                    document.getElementById('heading').textContent = "Kesalahan Koneksi";
-                    document.getElementById('subheading').textContent = "Gagal terhubung ke server database.";
+                    document.getElementById('form-box').classList.remove('hidden');
                 });
         }
 
@@ -261,7 +278,7 @@
 
                 lastRatingCategory = currentCategory;
                 
-                const delayTime = lastRatingCategory === null ? 0 : 400;
+                const delayTime = lastRatingCategory === null ? 0 : 350;
 
                 setTimeout(() => {
                     if (currentCategory === 'low') {
@@ -275,7 +292,6 @@
                             </div>
                         `;
                     } else {
-                        // Emoji bintang pada tombol telah dihapus di sini
                         bottomSection.innerHTML = `
                             <div class="space-y-2.5 text-center">
                                 <p class="text-xs font-semibold text-blue-900">Terima kasih atas penilaian positif Anda!</p>
