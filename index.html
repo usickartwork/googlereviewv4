@@ -185,14 +185,9 @@
             document.getElementById('heading').className = "text-xl font-bold text-slate-900 mb-1";
             document.getElementById('subheading').textContent = "Gunakan format link yang benar.";
         } else {
-            // Menggunakan AbortController untuk timeout fetch agar lebih cepat merespons
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 6000);
-
-            fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`, { signal: controller.signal })
+            fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
                 .then(res => res.json())
                 .then(res => {
-                    clearTimeout(timeoutId);
                     document.getElementById('loading-box').classList.add('hidden');
 
                     if (res.success && res.data.status === "activated") {
@@ -213,7 +208,6 @@
                     }
                 })
                 .catch(() => {
-                    clearTimeout(timeoutId);
                     document.getElementById('loading-box').classList.add('hidden');
                     document.getElementById('logo-box').classList.remove('hidden');
                     document.getElementById('form-box').classList.remove('hidden');
