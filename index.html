@@ -87,9 +87,11 @@
             <p id="success-desc" class="text-xs text-slate-500 max-w-xs">Ulasan Anda sangat berarti bagi perkembangan bisnis kami.</p>
         </div>
 
-        <!-- LOGO BRAND (Hanya tampil saat form aktivasi) -->
+        <!-- LOGO BRAND & HEADLINE AKTIVASI -->
         <div id="logo-box" class="mb-6 hidden">
-            <img src="logo.png" alt="Logo Brand" class="h-24 w-auto mx-auto object-contain">
+            <img src="logo.png" alt="Logo Brand" class="h-20 w-auto mx-auto object-contain mb-3">
+            <h1 class="text-xl font-bold text-slate-900">Aktivasi Kartu Ulasan</h1>
+            <p class="text-xs text-slate-500 mt-1">Silakan lengkapi data di bawah ini untuk menghubungkan kartu Anda.</p>
         </div>
 
         <!-- INDIKATOR LOADING ELEGAN -->
@@ -125,8 +127,8 @@
                 <input type="text" id="card-pin" placeholder="Contoh: 1234" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
             </div>
 
-            <button onclick="activateCard()" id="btn-activate" class="w-full bg-blue-600 text-white font-medium py-3 rounded-xl hover:bg-blue-700 transition shadow-sm mt-2">
-                Aktifkan Kartu Sekarang
+            <button onclick="activateCard()" id="btn-activate" class="w-full bg-blue-600 text-white font-medium py-3 rounded-xl hover:bg-blue-700 transition shadow-sm mt-2 flex items-center justify-center gap-2">
+                <span>Aktifkan Kartu Sekarang</span>
             </button>
         </div>
 
@@ -181,9 +183,6 @@
         if (!productId) {
             document.getElementById('loading-box').classList.add('hidden');
             document.getElementById('logo-box').classList.remove('hidden');
-            document.getElementById('heading').textContent = "Product ID Tidak Ditemukan";
-            document.getElementById('heading').className = "text-xl font-bold text-slate-900 mb-1";
-            document.getElementById('subheading').textContent = "Gunakan format link yang benar.";
         } else {
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
                 .then(res => res.json())
@@ -276,12 +275,13 @@
 
                 setTimeout(() => {
                     if (currentCategory === 'low') {
+                        // Border biru dan emoji 💬 dihapus agar clean
                         bottomSection.innerHTML = `
                             <div class="space-y-2.5 text-left">
                                 <p class="text-xs font-semibold text-slate-700">Mohon maaf, apa yang bisa diperbaiki?</p>
                                 <textarea id="feedback-msg" rows="3" placeholder="Tulis masukan Anda..." class="w-full p-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none bg-white"></textarea>
                                 <button onclick="triggerSuccessAnimation('whatsapp')" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition shadow-sm">
-                                    💬 Kirim Masukan ke WhatsApp Owner
+                                    Kirim Masukan ke WhatsApp Owner
                                 </button>
                             </div>
                         `;
@@ -347,6 +347,14 @@
                 document.getElementById('review-url').focus();
                 return;
             }
+
+            // Tambahkan animasi loading pada tombol aktivasi
+            const btnActivate = document.getElementById('btn-activate');
+            btnActivate.disabled = true;
+            btnActivate.innerHTML = `
+                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spinner"></div>
+                <span>Memproses...</span>
+            `;
 
             const data = { 
                 action: "activate", 
