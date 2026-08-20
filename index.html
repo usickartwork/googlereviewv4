@@ -78,7 +78,7 @@
     <!-- Container Utama -->
     <div id="main-container" class="w-full max-w-md min-h-screen md:min-h-0 bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center relative overflow-hidden">
         
-        <!-- MODAL OVERLAY ANIMASI SUKSES KETIKA KIRIM ULASAN -->
+        <!-- MODAL OVERLAY ANIMASI SUKSES -->
         <div id="success-overlay" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-6 text-center animate-pop-up">
             <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mb-4 shadow-sm animate-bounce">
                 ✓
@@ -90,7 +90,7 @@
         <!-- LOGO BRAND & HEADLINE AKTIVASI -->
         <div id="logo-box" class="mb-6 hidden">
             <img src="logo.png" alt="Logo Brand" class="h-20 w-auto mx-auto object-contain mb-3">
-            <h1 class="text-xl font-bold text-slate-900">Aktivasi Kartu Ulasan</h1>
+            <h1 class="text-xl font-bold text-slate-900">Aktivasi Kartu</h1>
             <p class="text-xs text-slate-500 mt-1">Silakan lengkapi data di bawah ini untuk menghubungkan kartu Anda.</p>
         </div>
 
@@ -275,7 +275,6 @@
 
                 setTimeout(() => {
                     if (currentCategory === 'low') {
-                        // Border biru dan emoji 💬 dihapus agar clean
                         bottomSection.innerHTML = `
                             <div class="space-y-2.5 text-left">
                                 <p class="text-xs font-semibold text-slate-700">Mohon maaf, apa yang bisa diperbaiki?</p>
@@ -348,7 +347,7 @@
                 return;
             }
 
-            // Tambahkan animasi loading pada tombol aktivasi
+            // Animasi Loading pada Tombol Aktivasi
             const btnActivate = document.getElementById('btn-activate');
             btnActivate.disabled = true;
             btnActivate.innerHTML = `
@@ -365,7 +364,26 @@
                 whatsapp_link: document.getElementById('owner-wa-link').value 
             };
 
-            fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) }).then(() => location.reload());
+            fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) })
+                .then(res => res.json())
+                .then(result => {
+                    // Tampilkan Animasi Sukses Aktivasi Berhasil
+                    const overlay = document.getElementById('success-overlay');
+                    document.getElementById('success-title').textContent = "Aktivasi Berhasil!";
+                    document.getElementById('success-desc').textContent = "Kartu Anda kini sudah siap digunakan.";
+                    overlay.classList.remove('hidden');
+
+                    if (typeof confetti === 'function') {
+                        confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
+                    }
+
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1400);
+                })
+                .catch(() => {
+                    location.reload();
+                });
         }
     </script>
 </body>
