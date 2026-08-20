@@ -20,12 +20,11 @@
             <img src="logo.png" alt="Logo Brand" class="h-24 w-auto mx-auto object-contain">
         </div>
 
-        <h1 id="heading" class="text-xl font-bold text-slate-900 mb-1">Memuat data kartu...</h1>
-        <p id="subheading" class="text-sm text-slate-500 mb-6">Silakan tunggu sebentar.</p>
+        <h1 id="heading" class="text-xl font-bold text-slate-900 mb-1">Memuat...</h1>
+        <p id="subheading" class="text-sm text-slate-500 mb-6">Mohon tunggu sebentar.</p>
 
         <!-- Form Aktivasi -->
         <div id="form-box" class="hidden space-y-4 text-left">
-            
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Bisnis / Usaha</label>
                 <input type="text" id="business-name" placeholder="Contoh: Coffee Shop Sukses" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
@@ -36,12 +35,10 @@
                 <input type="url" id="owner-wa-link" placeholder="https://wa.me/628xxxxxxxxxx" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
             </div>
 
-            <!-- Kolom Link Google Review dengan Tombol Convert ProductMate di Bawahnya -->
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Link Google Review</label>
                 <input type="url" id="review-url" placeholder="https://search.google.com/..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
                 
-                <!-- Kotak Petunjuk & Tombol Convert Gmaps -->
                 <div class="mt-2 bg-blue-50/70 border border-blue-100 p-3 rounded-xl space-y-2">
                     <p class="text-[11px] text-blue-900 leading-relaxed">
                         Belum punya link review google? Klik tombol di bawah untuk convert link gmaps menjadi link google review yang valid.
@@ -65,7 +62,6 @@
         <!-- Halaman Utama (Rating - Full Frame Vertikal & Beraksen Biru) -->
         <div id="rating-page" class="hidden space-y-6">
             
-            <!-- Aksen Garis Biru Elegan & Nama Bisnis (Klik 5x untuk Reset) -->
             <div class="text-center space-y-2 cursor-pointer select-none" onclick="handleSecretResetClick()" title="Ketuk 5 kali untuk ubah data">
                 <div class="w-10 h-1 bg-blue-600 mx-auto rounded-full mb-3"></div>
                 <h1 id="display-business" class="text-3xl font-extrabold text-slate-900 tracking-tight"></h1>
@@ -73,7 +69,6 @@
                 <p class="text-[11px] text-blue-600 uppercase tracking-widest font-bold pt-1">Berikan Ulasan Anda</p>
             </div>
 
-            <!-- Bintang -->
             <div class="flex justify-center gap-2 py-2" id="star-container">
                 <button onclick="handleRating(1)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
                 <button onclick="handleRating(2)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
@@ -82,7 +77,6 @@
                 <button onclick="handleRating(5)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
             </div>
 
-            <!-- Opsi Feedback Privat -->
             <div id="bad-review-section" class="hidden space-y-3 text-left bg-blue-50/40 border border-blue-100 p-4 rounded-2xl">
                 <p class="text-xs font-semibold text-slate-700">Mohon maaf, apa yang bisa diperbaiki?</p>
                 <textarea id="feedback-msg" rows="3" placeholder="Tulis masukan Anda..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none bg-white"></textarea>
@@ -91,7 +85,6 @@
                 </button>
             </div>
 
-            <!-- Opsi Google Review -->
             <div id="good-review-section" class="hidden space-y-3 text-center bg-blue-50/60 border border-blue-100 p-4 rounded-2xl">
                 <p class="text-xs font-semibold text-blue-900">Terima kasih atas penilaian positif Anda!</p>
                 <a id="google-review-btn" href="#" target="_blank" class="block w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition font-semibold shadow-sm">
@@ -116,6 +109,7 @@
         } else {
             document.getElementById('logo-box').classList.add('hidden');
 
+            // Eksekusi fetch data lebih cepat tanpa fungsi tambahan yang memberatkan
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
                 .then(res => res.json())
                 .then(res => {
@@ -146,24 +140,15 @@
 
         function handleSecretResetClick() {
             secretClickCount++;
-            
             if (secretClickTimer) clearTimeout(secretClickTimer);
-
-            secretClickTimer = setTimeout(() => {
-                secretClickCount = 0;
-            }, 2000);
+            secretClickTimer = setTimeout(() => { secretClickCount = 0; }, 2000);
 
             if (secretClickCount >= 5) {
                 secretClickCount = 0;
                 clearTimeout(secretClickTimer);
                 
                 const pin = prompt("🔐 Menu Reset Data Kartu\nMasukkan PIN keamanan kartu ini:");
-                if (pin === null) return;
-
-                if (!pin.trim()) {
-                    alert("PIN tidak boleh kosong!");
-                    return;
-                }
+                if (pin === null || !pin.trim()) return;
 
                 fetch(`${SCRIPT_URL}?action=reset&product_id=${productId}&pin=${encodeURIComponent(pin)}`)
                     .then(res => res.json())
@@ -175,9 +160,7 @@
                             alert("Gagal: " + (result.message || "PIN salah!"));
                         }
                     })
-                    .catch(() => {
-                        alert("Terjadi kesalahan jaringan.");
-                    });
+                    .catch(() => alert("Terjadi kesalahan jaringan."));
             }
         }
 
@@ -194,9 +177,8 @@
         function activateCard() {
             const reviewUrl = document.getElementById('review-url').value.trim();
 
-            // Validasi ketat format link Google Review (harus diawali https://search.google.com/)
             if (!reviewUrl.startsWith("https://search.google.com/")) {
-                alert("Link Google Review tidak valid!\n\nPastikan Anda menggunakan link dari ProductMate yang diawali dengan 'https://search.google.com/'. Silakan gunakan tombol convert di bawah kolom link jika belum memilikinya.");
+                alert("Link Google Review tidak valid!\n\nPastikan Anda menggunakan link dari ProductMate yang diawali dengan 'https://search.google.com/'.");
                 document.getElementById('review-url').focus();
                 return;
             }
