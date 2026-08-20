@@ -8,7 +8,6 @@
     <!-- Library Ringan untuk Efek Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* Transisi Global Lembut dan Lambat (1.2 Detik) */
         * {
             transition: all 1.2s cubic-bezier(0.25, 1, 0.5, 1);
         }
@@ -142,9 +141,9 @@
                 <button onclick="handleRating(5)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
             </div>
 
-            <!-- KONTINER DINAMIS TUNGGAL DENGAN MIN-HEIGHT UNTUK MENCEGAH HENTAKAN -->
-            <div id="dynamic-bottom-section" class="hidden opacity-0 min-h-[140px] bg-blue-50/50 border border-blue-100 p-4 rounded-2xl flex flex-col justify-center">
-                <!-- Konten akan diisi otomatis lewat JavaScript -->
+            <!-- KONTINER DINAMIS DENGAN TINGGI TETAP PERMANEN (Mencegah Bagian Atas Ikut Bergeser) -->
+            <div id="dynamic-bottom-section" class="opacity-0 min-h-[170px] bg-blue-50/50 border border-blue-100 p-4 rounded-2xl flex flex-col justify-center">
+                <p class="text-xs text-slate-400 italic">Ketuk bintang di atas untuk memberi penilaian...</p>
             </div>
         </div>
     </div>
@@ -286,7 +285,8 @@
                             </div>
                         `;
                     }
-                    bottomSection.classList.remove('hidden', 'animate-fade-out');
+                    bottomSection.classList.remove('animate-fade-out');
+                    bottomSection.style.opacity = '1';
                     bottomSection.classList.add('animate-ultra-smooth');
                 }, delayTime);
             }
@@ -344,7 +344,7 @@
                 google_review_url: reviewUrl, 
                 business_name: document.getElementById('business-name').value, 
                 pin: document.getElementById('card-pin').value, 
-                whatsapp_link: document.getElementById('owner-wa-link').value 
+                whatsapp_link: document.getElementById('owner-wa-link'].value 
             };
 
             fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) }).then(() => location.reload());
