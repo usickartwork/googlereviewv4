@@ -16,23 +16,26 @@
         .star-btn:hover { transform: scale(1.25); }
         .star-active { transform: scale(1.3); }
         
-        /* Animasi Transisi Halus Tanpa Patahan untuk Bagian Bawah */
+        /* Transisi Pure Fade Murni yang Jauh Lebih Lambat & Smooth */
         .review-section {
             opacity: 0;
-            transform: translateY(15px);
-            max-height: 0;
-            overflow: hidden;
+            visibility: hidden;
+            position: absolute;
+            width: 100%;
+            left: 0;
+            top: 0;
             pointer-events: none;
-            transition: opacity 0.5s ease, transform 0.5s ease, max-height 0.5s ease, padding 0.5s ease;
+            transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.9s ease;
         }
         .review-section.active {
             opacity: 1;
-            transform: translateY(0);
-            max-height: 350px;
+            visibility: visible;
+            position: relative;
             pointer-events: auto;
+            transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.1s, visibility 0.9s ease 0.1s;
         }
 
-        /* Animasi Pop-up Bounce Kenyal untuk Emotikon yang Selalu Reset */
+        /* Animasi Pop-up Bounce Kenyal untuk Emotikon */
         @keyframes emojiBounce {
             0% { transform: scale(0.4); opacity: 0; }
             50% { transform: scale(1.3); opacity: 1; }
@@ -139,21 +142,24 @@
                 <button onclick="handleRating(5)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
             </div>
 
-            <!-- Opsi Feedback Privat (Bintang 1-3) -->
-            <div id="bad-review-section" class="review-section space-y-3 text-left bg-blue-50/40 border border-blue-100 p-4 rounded-2xl">
-                <p class="text-xs font-semibold text-slate-700">Mohon maaf, apa yang bisa diperbaiki?</p>
-                <textarea id="feedback-msg" rows="3" placeholder="Tulis masukan Anda..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none bg-white"></textarea>
-                <button onclick="triggerSuccessAnimation('whatsapp')" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition shadow-sm">
-                    💬 Kirim Masukan ke WhatsApp Owner
-                </button>
-            </div>
+            <!-- Wrapper Khusus Bagian Bawah agar Cross-Fade Sempurna Tanpa Patahan -->
+            <div class="relative min-h-[140px]">
+                <!-- Opsi Feedback Privat (Bintang 1-3) -->
+                <div id="bad-review-section" class="review-section space-y-3 text-left bg-blue-50/40 border border-blue-100 p-4 rounded-2xl">
+                    <p class="text-xs font-semibold text-slate-700">Mohon maaf, apa yang bisa diperbaiki?</p>
+                    <textarea id="feedback-msg" rows="3" placeholder="Tulis masukan Anda..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none bg-white"></textarea>
+                    <button onclick="triggerSuccessAnimation('whatsapp')" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition shadow-sm">
+                        💬 Kirim Masukan ke WhatsApp Owner
+                    </button>
+                </div>
 
-            <!-- Opsi Google Review (Bintang 4-5) -->
-            <div id="good-review-section" class="review-section space-y-3 text-center bg-blue-50/60 border border-blue-100 p-4 rounded-2xl">
-                <p class="text-xs font-semibold text-blue-900">Terima kasih atas penilaian positif Anda!</p>
-                <button onclick="triggerSuccessAnimation('google')" class="block w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition font-semibold shadow-sm">
-                    ⭐ Kirim Ulasan Anda
-                </button>
+                <!-- Opsi Google Review (Bintang 4-5) -->
+                <div id="good-review-section" class="review-section space-y-3 text-center bg-blue-50/60 border border-blue-100 p-4 rounded-2xl">
+                    <p class="text-xs font-semibold text-blue-900">Terima kasih atas penilaian positif Anda!</p>
+                    <button onclick="triggerSuccessAnimation('google')" class="block w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition font-semibold shadow-sm">
+                        ⭐ Kirim Ulasan Anda
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -241,11 +247,11 @@
         function handleRating(rating) {
             selectedStarRating = rating;
             
-            // Animasi Bounce Kenyal pada Emotikon (Reset & Trigger ulang kelas animasi)
+            // Animasi Bounce Kenyal pada Emotikon
             const emojiEl = document.getElementById('emoji-reaction');
             emojiEl.textContent = reactionEmojis[rating] || "😊";
             emojiEl.classList.remove('animate-emoji-bounce');
-            void emojiEl.offsetWidth; // Memicu reflow browser agar animasi ter-restart sempurna
+            void emojiEl.offsetWidth; 
             emojiEl.classList.add('animate-emoji-bounce');
 
             // Perbarui warna bintang
@@ -257,7 +263,7 @@
                 }
             });
 
-            // Transisi Bagian Bawah yang Mulus Tanpa Patahan
+            // Transisi Pure Fade Antar Bagian Bawah (Lambat dan Mulus Tanpa Patahan)
             const badSection = document.getElementById('bad-review-section');
             const goodSection = document.getElementById('good-review-section');
 
