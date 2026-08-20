@@ -5,15 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beri Ulasan Kami</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Library Ringan untuk Efek Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        .star-btn { transition: transform 0.1s ease; }
-        .star-btn:hover { transform: scale(1.15); }
+        .star-btn { transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
+        .star-btn:hover { transform: scale(1.2); }
+        .star-active { transform: scale(1.25); }
+        
+        /* Animasi Muncul Halus (Smooth Slide Down) */
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-down {
+            animation: slideDown 0.3s ease-out forwards;
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-0 md:p-4">
-
-    <!-- Elemen Audio Pendek untuk Efek Klik Bintang -->
-    <audio id="pop-sound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
 
     <!-- Container Utama -->
     <div id="main-container" class="w-full max-w-md min-h-screen md:min-h-0 bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center">
@@ -67,7 +76,7 @@
                 <p class="text-[11px] text-blue-600 uppercase tracking-widest font-bold pt-1">Berikan Ulasan Anda</p>
             </div>
 
-            <!-- Bintang -->
+            <!-- Bintang dengan Interaksi Visual -->
             <div class="flex justify-center gap-3 py-2" id="star-container">
                 <button onclick="handleRating(1)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
                 <button onclick="handleRating(2)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
@@ -76,7 +85,8 @@
                 <button onclick="handleRating(5)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
             </div>
 
-            <div id="bad-review-section" class="hidden space-y-3 text-left bg-blue-50/40 border border-blue-100 p-4 rounded-2xl">
+            <!-- Opsi Feedback Privat (Bintang 1-3) dengan Animasi Smooth Slide Down -->
+            <div id="bad-review-section" class="hidden space-y-3 text-left bg-blue-50/40 border border-blue-100 p-4 rounded-2xl animate-slide-down">
                 <p class="text-xs font-semibold text-slate-700">Mohon maaf, apa yang bisa diperbaiki?</p>
                 <textarea id="feedback-msg" rows="3" placeholder="Tulis masukan Anda..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none bg-white"></textarea>
                 <button onclick="sendPrivateFeedbackToWhatsApp()" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition shadow-sm">
@@ -84,7 +94,8 @@
                 </button>
             </div>
 
-            <div id="good-review-section" class="hidden space-y-3 text-center bg-blue-50/60 border border-blue-100 p-4 rounded-2xl">
+            <!-- Opsi Google Review (Bintang 4-5) dengan Animasi Smooth Slide Down -->
+            <div id="good-review-section" class="hidden space-y-3 text-center bg-blue-50/60 border border-blue-100 p-4 rounded-2xl animate-slide-down">
                 <p class="text-xs font-semibold text-blue-900">Terima kasih atas penilaian positif Anda!</p>
                 <a id="google-review-btn" href="#" target="_blank" class="block w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs hover:bg-blue-700 transition font-semibold shadow-sm">
                     ⭐ Kirim Ulasan Anda
@@ -136,15 +147,6 @@
                 });
         }
 
-        // Fungsi Memutar Suara Klik Bintang
-        function playStarSound() {
-            const sound = document.getElementById('pop-sound');
-            if (sound) {
-                sound.currentTime = 0;
-                sound.play().catch(e => console.log("Audio diblokir browser:", e));
-            }
-        }
-
         function handleSecretResetClick() {
             secretClickCount++;
             if (secretClickTimer) clearTimeout(secretClickTimer);
@@ -173,12 +175,35 @@
 
         function handleRating(rating) {
             selectedStarRating = rating;
-            playStarSound(); // Memanggil suara klik
             
-            document.querySelectorAll('.star-btn').forEach((s, i) => s.className = `star-btn text-5xl focus:outline-none ${i < rating ? 'text-amber-400' : 'text-slate-200'}`);
-            document.getElementById('bad-review-section').classList.toggle('hidden', rating > 3);
-            document.getElementById('good-review-section').classList.toggle('hidden', rating <= 3);
-            if (rating > 3) document.getElementById('google-review-btn').href = targetReviewUrl;
+            // Perbarui warna bintang dan beri sedikit efek aktif memantul
+            document.querySelectorAll('.star-btn').forEach((s, i) => {
+                if (i < rating) {
+                    s.className = `star-btn text-5xl focus:outline-none text-amber-400 star-active`;
+                } else {
+                    s.className = `star-btn text-5xl focus:outline-none text-slate-200`;
+                }
+            });
+
+            // Tampilkan section berdasarkan rating (1-3 atau 4-5)
+            const badSection = document.getElementById('bad-review-section');
+            const goodSection = document.getElementById('good-review-section');
+
+            badSection.classList.toggle('hidden', rating > 3);
+            goodSection.classList.toggle('hidden', rating <= 3);
+
+            if (rating > 3) {
+                document.getElementById('google-review-btn').href = targetReviewUrl;
+                
+                // Memicu Efek Confetti (Konfeti) Meriah Khusus Rating 4-5 ⭐
+                if (typeof confetti === 'function') {
+                    confetti({
+                        particleCount: 80,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+                }
+            }
         }
 
         function sendPrivateFeedbackToWhatsApp() { window.location.href = ownerWaLink.trim(); }
