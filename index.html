@@ -65,12 +65,13 @@
                 <p class="text-[11px] text-blue-600 uppercase tracking-widest font-bold pt-1">Berikan Ulasan Anda</p>
             </div>
 
-            <div class="flex justify-center gap-2 py-2" id="star-container">
-                <button onclick="handleRating(1)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
-                <button onclick="handleRating(2)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
-                <button onclick="handleRating(3)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
-                <button onclick="handleRating(4)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
-                <button onclick="handleRating(5)" class="star-btn text-4xl text-slate-200 focus:outline-none">★</button>
+            <!-- Bintang Lebih Besar (text-5xl) -->
+            <div class="flex justify-center gap-3 py-2" id="star-container">
+                <button onclick="handleRating(1)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
+                <button onclick="handleRating(2)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
+                <button onclick="handleRating(3)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
+                <button onclick="handleRating(4)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
+                <button onclick="handleRating(5)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
             </div>
 
             <div id="bad-review-section" class="hidden space-y-3 text-left bg-blue-50/40 border border-blue-100 p-4 rounded-2xl">
@@ -161,7 +162,7 @@
 
         function handleRating(rating) {
             selectedStarRating = rating;
-            document.querySelectorAll('.star-btn').forEach((s, i) => s.className = `star-btn text-4xl focus:outline-none ${i < rating ? 'text-amber-400' : 'text-slate-200'}`);
+            document.querySelectorAll('.star-btn').forEach((s, i) => s.className = `star-btn text-5xl focus:outline-none ${i < rating ? 'text-amber-400' : 'text-slate-200'}`);
             document.getElementById('bad-review-section').classList.toggle('hidden', rating > 3);
             document.getElementById('good-review-section').classList.toggle('hidden', rating <= 3);
             if (rating > 3) document.getElementById('google-review-btn').href = targetReviewUrl;
