@@ -8,7 +8,6 @@
     <!-- Library Ringan untuk Efek Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* Transisi Universal yang Dibuat Lebih Lambat & Lembut (0.6s) */
         * {
             transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -17,17 +16,26 @@
         .star-btn:hover { transform: scale(1.25); }
         .star-active { transform: scale(1.3); }
         
-        /* Animasi Muncul Lebih Lambat, Anggun, dan Mulus */
+        /* Animasi Muncul Lembut untuk Kotak Bawah (Diperhalus & Diperlambat) */
         @keyframes smoothAppear {
-            from { opacity: 0; transform: translateY(-16px); max-height: 0; }
-            to { opacity: 1; transform: translateY(0); max-height: 300px; }
+            0% { opacity: 0; transform: translateY(12px); max-height: 0; }
+            100% { opacity: 1; transform: translateY(0); max-height: 250px; }
         }
         .animate-smooth-appear {
-            animation: smoothAppear 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: smoothAppear 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             overflow: hidden;
         }
 
-        /* Animasi Pop-up Sukses Lebih Lembut */
+        /* Animasi Mendarat Lembut saat Halaman Ulasan Pertama Kali Muncul */
+        @keyframes pageFadeIn {
+            0% { opacity: 0; transform: translateY(15px) scale(0.98); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-page-fade-in {
+            animation: pageFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Animasi Pop-up Sukses */
         @keyframes popUp {
             0% { transform: scale(0.85); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
@@ -169,7 +177,11 @@
                         const container = document.getElementById('main-container');
                         container.className = "w-full max-w-md min-h-screen bg-white p-6 sm:p-8 text-center flex flex-col justify-center relative overflow-hidden";
 
-                        document.getElementById('rating-page').classList.remove('hidden');
+                        const ratingPage = document.getElementById('rating-page');
+                        ratingPage.textContent; // trigger reflow
+                        ratingPage.classList.remove('hidden');
+                        ratingPage.classList.add('animate-page-fade-in'); // Tambahkan animasi mendarat halus
+
                         document.getElementById('display-business').textContent = res.data.business_name;
                     } else {
                         document.getElementById('logo-box').classList.remove('hidden');
@@ -216,7 +228,7 @@
             // Tampilkan dan perbarui Emoji Reaksi dengan transisi lembut
             const emojiEl = document.getElementById('emoji-reaction');
             emojiEl.textContent = reactionEmojis[rating] || "😊";
-            emojiEl.className = "text-4xl h-12 opacity-100 flex items-center justify-center transform scale-100 transition-all duration-500";
+            emojiEl.className = "text-4xl h-12 opacity-100 flex items-center justify-center transform scale-100 transition-all duration-700";
 
             // Perbarui warna bintang
             document.querySelectorAll('.star-btn').forEach((s, i) => {
@@ -227,16 +239,20 @@
                 }
             });
 
-            // Tampilkan section berdasarkan rating dengan animasi melandai
+            // Transisi section bawah lebih lambat & mengalir
             const badSection = document.getElementById('bad-review-section');
             const goodSection = document.getElementById('good-review-section');
 
             if (rating <= 3) {
+                goodSection.style.opacity = '0';
                 goodSection.classList.add('hidden');
                 badSection.classList.remove('hidden');
+                badSection.style.opacity = '1';
             } else {
+                badSection.style.opacity = '0';
                 badSection.classList.add('hidden');
                 goodSection.classList.remove('hidden');
+                goodSection.style.opacity = '1';
             }
 
             // Efek Confetti jika bintang 4 atau 5
