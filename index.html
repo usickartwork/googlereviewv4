@@ -58,11 +58,14 @@
             <p class="text-xs text-slate-500 mt-1">Silakan lengkapi data di bawah ini untuk menghubungkan kartu Anda.</p>
         </div>
 
-        <!-- INDIKATOR LOADING ELEGAN -->
+        <!-- INDIKATOR LOADING ELEGAN DENGAN TOMBOL BATAL/RELOAD JIKA LAMA -->
         <div id="loading-box" class="flex flex-col items-center justify-center space-y-3 py-6">
             <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spinner"></div>
             <h1 id="heading" class="text-base font-semibold text-slate-800">Memuat halaman...</h1>
             <p id="subheading" class="text-xs text-slate-400">Mohon tunggu sebentar.</p>
+            <div id="reload-prompt" class="hidden pt-2">
+                <button onclick="location.reload()" class="text-xs text-blue-600 underline font-medium">Server agak lambat, klik untuk muat ulang</button>
+            </div>
         </div>
 
         <!-- Form Aktivasi -->
@@ -193,13 +196,23 @@
             5: "🤩"
         };
 
+        // Pengaman Timeout: Jika dalam 6 detik server Google tidak merespons, tampilkan tombol reload
+        const loadTimeout = setTimeout(() => {
+            const loadingBox = document.getElementById('loading-box');
+            if (!loadingBox.classList.contains('hidden')) {
+                document.getElementById('reload-prompt').classList.remove('hidden');
+            }
+        }, 6000);
+
         if (!productId) {
+            clearTimeout(loadTimeout);
             document.getElementById('loading-box').classList.add('hidden');
             document.getElementById('logo-box').classList.remove('hidden');
         } else {
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
                 .then(res => res.json())
                 .then(res => {
+                    clearTimeout(loadTimeout);
                     document.getElementById('loading-box').classList.add('hidden');
                     if (res.success && res.data.status === "activated") {
                         targetReviewUrl = res.data.google_review_url;
@@ -215,6 +228,7 @@
                     }
                 })
                 .catch(() => {
+                    clearTimeout(loadTimeout);
                     document.getElementById('loading-box').classList.add('hidden');
                     document.getElementById('logo-box').classList.remove('hidden');
                     document.getElementById('form-box').classList.remove('hidden');
@@ -387,7 +401,6 @@
                 confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
             }
 
-            // Gunakan sendBeacon agar pengiriman data ke server berjalan instan di latar belakang tanpa membuat browser stuck
             try {
                 navigator.sendBeacon(SCRIPT_URL, JSON.stringify({ 
                     action: "track_click", 
