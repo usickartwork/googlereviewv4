@@ -177,7 +177,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrDzMoosfaQu-CT4wnw7avyWFusNpw2ylo4IWmYbO53021t_20FGx5La8YP9Rds0Ym/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQ7CAEfIFjA6cA-TVMlyox0Wb8f_JFw_Gu_Yko9vwSWnpDFnD-YXDbJfywBLbij1g1/exec";
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
         let targetReviewUrl = "", ownerWaLink = "", selectedStarRating = 0;
@@ -238,15 +238,13 @@
                 document.getElementById('success-desc').textContent = "Mengambil data statistik.";
                 overlay.classList.remove('hidden');
 
-                // Mengambil data statistik dari server (asumsi backend mengirim data metrik)
-                fetch(`${SCRIPT_URL}?action=get_stats&product_id=${productId}&pin=${encodeURIComponent(pin)}`)
+                fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}&pin=${encodeURIComponent(pin)}`)
                     .then(res => res.json())
                     .then(result => {
                         overlay.classList.add('hidden');
-                        if (result.success) {
-                            // Isi data metrik ke elemen dashboard
+                        if (result.success && result.stats) {
                             document.getElementById('stat-visitors').textContent = result.stats.total_visitors || 0;
-                            document.getElementById('stat-rating').textContent = (result.stats.avg_rating || 0).toFixed(1);
+                            document.getElementById('stat-rating').textContent = (result.stats.avg_rating || 5.0).toFixed(1);
                             
                             const googleCount = result.stats.google_clicks || 0;
                             const privateCount = result.stats.private_clicks || 0;
@@ -268,9 +266,7 @@
                     })
                     .catch(() => {
                         overlay.classList.add('hidden');
-                        // Fallback jika backend stats belum diset (buka dashboard dengan data kosong/aman)
-                        document.getElementById('rating-page').classList.add('hidden');
-                        document.getElementById('admin-dashboard').classList.remove('hidden');
+                        alert("Terjadi kesalahan jaringan atau verifikasi PIN.");
                     });
             }
         }
@@ -289,7 +285,10 @@
             document.getElementById('success-desc').textContent = "Mohon tunggu sebentar.";
             overlay.classList.remove('hidden');
 
-            fetch(`${SCRIPT_URL}?action=reset&product_id=${productId}&pin=${encodeURIComponent(pin)}`)
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "reset", product_id: productId, pin: pin })
+            })
                 .then(res => res.json())
                 .then(result => {
                     if (result.success) {
@@ -372,6 +371,8 @@
             const titleEl = document.getElementById('success-title');
             const descEl = document.getElementById('success-desc');
 
+            let clickType = (destination === 'google') ? 'google' : 'private';
+
             if (destination === 'google') {
                 titleEl.textContent = "Sedang mengarahkan ke ulasan...";
                 descEl.textContent = "Membuka halaman Google Maps.";
@@ -386,13 +387,19 @@
                 confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
             }
 
-            setTimeout(() => {
-                if (destination === 'google') {
-                    window.location.href = targetReviewUrl;
-                } else {
-                    window.location.href = ownerWaLink.trim();
-                }
-            }, 1200);
+            // Kirim tracking klik ke backend sebelum redirect
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "track_click", product_id: productId, type: clickType })
+            }).finally(() => {
+                setTimeout(() => {
+                    if (destination === 'google') {
+                        window.location.href = targetReviewUrl;
+                    } else {
+                        window.location.href = ownerWaLink.trim();
+                    }
+                }, 1000);
+            });
         }
 
         function activateCard() {
