@@ -387,19 +387,22 @@
                 confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
             }
 
-            // Kirim tracking klik ke backend sebelum redirect
-            fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "track_click", product_id: productId, type: clickType })
-            }).finally(() => {
-                setTimeout(() => {
-                    if (destination === 'google') {
-                        window.location.href = targetReviewUrl;
-                    } else {
-                        window.location.href = ownerWaLink.trim();
-                    }
-                }, 1000);
-            });
+            // Gunakan sendBeacon agar pengiriman data ke server berjalan instan di latar belakang tanpa membuat browser stuck
+            try {
+                navigator.sendBeacon(SCRIPT_URL, JSON.stringify({ 
+                    action: "track_click", 
+                    product_id: productId, 
+                    type: clickType 
+                }));
+            } catch (e) {}
+
+            setTimeout(() => {
+                if (destination === 'google') {
+                    window.location.href = targetReviewUrl;
+                } else {
+                    window.location.href = ownerWaLink.trim();
+                }
+            }, 800);
         }
 
         function activateCard() {
@@ -425,7 +428,10 @@
                 whatsapp_link: document.getElementById('owner-wa-link').value 
             };
 
-            fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) })
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(data)
+            })
                 .then(res => res.json())
                 .then(result => {
                     if (typeof confetti === 'function') {
