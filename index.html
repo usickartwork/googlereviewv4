@@ -17,7 +17,7 @@
         .star-btn:hover { transform: scale(1.25); }
         .star-active { transform: scale(1.3); }
         
-        /* Animasi Lembut Naik dari Bawah untuk Kotak Ulasan (Dipercepat Jadi 0.6 Detik agar Responsif) */
+        /* Animasi Lembut Naik dari Bawah untuk Kotak Ulasan */
         @keyframes smoothSlideUp {
             0% { opacity: 0; transform: translateY(15px); }
             100% { opacity: 1; transform: translateY(0); }
@@ -64,13 +64,13 @@
             animation: pageFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* Animasi Pop-up Sukses */
+        /* Animasi Pop-up Overlay */
         @keyframes popUp {
-            0% { transform: scale(0.85); opacity: 0; }
+            0% { transform: scale(0.9); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
         .animate-pop-up {
-            animation: popUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            animation: popUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
     </style>
 </head>
@@ -79,13 +79,11 @@
     <!-- Container Utama -->
     <div id="main-container" class="w-full max-w-md min-h-screen md:min-h-0 bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center relative overflow-hidden">
         
-        <!-- MODAL OVERLAY ANIMASI SUKSES -->
+        <!-- MODAL OVERLAY LOADING SETELAH KIRIM ULASAN / AKTIVASI -->
         <div id="success-overlay" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-6 text-center animate-pop-up">
-            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mb-4 shadow-sm animate-bounce">
-                ✓
-            </div>
-            <h2 id="success-title" class="text-xl font-bold text-slate-900 mb-1">Terima Kasih!</h2>
-            <p id="success-desc" class="text-xs text-slate-500 max-w-xs">Ulasan Anda sangat berarti bagi perkembangan bisnis kami.</p>
+            <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spinner mb-4"></div>
+            <h2 id="success-title" class="text-base font-bold text-slate-900 mb-1">Sedang mengirim ulasan...</h2>
+            <p id="success-desc" class="text-xs text-slate-400 max-w-xs">Mohon tunggu sebentar.</p>
         </div>
 
         <!-- LOGO BRAND & HEADLINE AKTIVASI -->
@@ -250,7 +248,7 @@
             void emojiEl.offsetWidth; 
             emojiEl.classList.add('animate-emoji-bounce');
 
-            // Perbarui warna bintang secara instan
+            // Perbarui warna bintang
             document.querySelectorAll('.star-btn').forEach((s, i) => {
                 if (i < rating) {
                     s.className = `star-btn text-5xl focus:outline-none text-amber-400 star-active`;
@@ -317,11 +315,11 @@
             const descEl = document.getElementById('success-desc');
 
             if (destination === 'google') {
-                titleEl.textContent = "Ulasan Luar Biasa!";
-                descEl.textContent = "Mengarahkan Anda ke Google Maps...";
+                titleEl.textContent = "Sedang mengarahkan ke ulasan...";
+                descEl.textContent = "Membuka halaman Google Maps.";
             } else {
-                titleEl.textContent = "Masukan Terkirim!";
-                descEl.textContent = "Mengarahkan Anda ke WhatsApp Owner...";
+                titleEl.textContent = "Sedang mengirim ulasan...";
+                descEl.textContent = "Menyiapkan pesan WhatsApp.";
             }
 
             overlay.classList.remove('hidden');
@@ -348,13 +346,11 @@
                 return;
             }
 
-            // Animasi Loading pada Tombol Aktivasi
-            const btnActivate = document.getElementById('btn-activate');
-            btnActivate.disabled = true;
-            btnActivate.innerHTML = `
-                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spinner"></div>
-                <span>Memproses...</span>
-            `;
+            // Tampilkan Overlay Loading saat Aktivasi
+            const overlay = document.getElementById('success-overlay');
+            document.getElementById('success-title').textContent = "Sedang mengaktifkan kartu...";
+            document.getElementById('success-desc').textContent = "Mohon tunggu sebentar.";
+            overlay.classList.remove('hidden');
 
             const data = { 
                 action: "activate", 
@@ -368,18 +364,13 @@
             fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) })
                 .then(res => res.json())
                 .then(result => {
-                    const overlay = document.getElementById('success-overlay');
-                    document.getElementById('success-title').textContent = "Aktivasi Berhasil!";
-                    document.getElementById('success-desc').textContent = "Kartu Anda kini sudah siap digunakan.";
-                    overlay.classList.remove('hidden');
-
                     if (typeof confetti === 'function') {
                         confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
                     }
 
                     setTimeout(() => {
                         location.reload();
-                    }, 1200);
+                    }, 1000);
                 })
                 .catch(() => {
                     location.reload();
