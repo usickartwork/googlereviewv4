@@ -250,7 +250,24 @@
             const btnSubmit = document.getElementById('btnSubmitReview');
             if (btnSubmit) {
                 btnSubmit.disabled = true;
-                btnSubmit.innerText = "Mengirim data...";
+                btnSubmit.innerText = "Memproses...";
+            }
+
+            let clickType = (destination === 'google') ? 'maps' : 'wa';
+            let feedbackText = "";
+            let fullWaUrl = ownerWaLink.trim();
+
+            if (destination === 'whatsapp') {
+                const msgInput = document.getElementById('feedback-msg');
+                if (msgInput) {
+                    feedbackText = msgInput.value.trim();
+                }
+                if (feedbackText) {
+                    let customMsg = encodeURIComponent(`Halo Kak, saya ingin memberikan masukan:\n\n"${feedbackText}"\n\nPenilaian: ${selectedStarRating} Bintang`);
+                    fullWaUrl += `?text=${customMsg}`;
+                }
+                // Langsung buka WhatsApp secara instan tanpa terhalang popup blocker browser HP
+                window.location.href = fullWaUrl;
             }
 
             const overlay = document.getElementById('success-overlay');
@@ -260,27 +277,14 @@
             if (destination === 'google') {
                 titleEl.textContent = "Sedang mengarahkan ke ulasan...";
                 descEl.textContent = "Membuka halaman Google Maps.";
-            } else {
-                titleEl.textContent = "Menyiapkan pesan WhatsApp...";
-                descEl.textContent = "Membuka aplikasi WhatsApp.";
-            }
+                overlay.classList.remove('hidden');
 
-            overlay.classList.remove('hidden');
-
-            if (destination === 'google' && typeof confetti === 'function') {
-                confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
-            }
-
-            let clickType = (destination === 'google') ? 'maps' : 'wa';
-            let feedbackText = "";
-            
-            if (destination === 'whatsapp') {
-                const msgInput = document.getElementById('feedback-msg');
-                if (msgInput) {
-                    feedbackText = msgInput.value.trim();
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
                 }
             }
 
+            // Kirim data rating & statistik ke Google Sheets di latar belakang
             let ratingPromise = fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
@@ -301,31 +305,16 @@
 
             Promise.all([ratingPromise, clickPromise])
                 .then(() => {
-                    setTimeout(() => {
-                        if (destination === 'google') {
+                    if (destination === 'google') {
+                        setTimeout(() => {
                             window.location.href = targetReviewUrl;
-                        } else {
-                            let fullWaUrl = ownerWaLink.trim();
-                            if (feedbackText) {
-                                let customMsg = encodeURIComponent(`Halo Kak, saya ingin memberikan masukan:\n\n"${feedbackText}"\n\nPenilaian: ${selectedStarRating} Bintang`);
-                                fullWaUrl += `?text=${customMsg}`;
-                            }
-                            
-                            window.open(fullWaUrl, '_blank');
-                            overlay.classList.add('hidden');
-                            window.location.reload();
-                        }
-                    }, 500);
+                        }, 500);
+                    }
                 })
                 .catch(() => {
-                    setTimeout(() => {
-                        if (destination === 'google') {
-                            window.location.href = targetReviewUrl;
-                        } else {
-                            window.open(ownerWaLink, '_blank');
-                            location.reload();
-                        }
-                    }, 500);
+                    if (destination === 'google') {
+                        window.location.href = targetReviewUrl;
+                    }
                 });
         }
 
