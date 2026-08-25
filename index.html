@@ -31,6 +31,9 @@
         .animate-pop-up { animation: popUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
         .btn-modern:active { transform: scale(0.97); }
+        
+        /* Efek nonaktif sebelum data siap */
+        .disabled-section { opacity: 0.4; pointer-events: none; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-0 md:p-4">
@@ -98,18 +101,22 @@
                 </div>
                 <p class="text-[11px] text-blue-600 uppercase tracking-widest font-bold pt-1">Berikan Ulasan Anda</p>
             </div>
-            <div id="emoji-container" class="h-12 flex items-center justify-center">
-                <div id="emoji-reaction" class="text-4xl opacity-0 transform scale-50">😊</div>
-            </div>
-            <div class="flex justify-center gap-3 py-1" id="star-container">
-                <button onclick="handleRating(1)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
-                <button onclick="handleRating(2)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
-                <button onclick="handleRating(3)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
-                <button onclick="handleRating(4)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
-                <button onclick="handleRating(5)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
-            </div>
-            <div id="dynamic-bottom-section" class="opacity-0 min-h-[140px] bg-blue-50/30 p-3.5 rounded-2xl flex flex-col justify-center">
-                <p class="text-xs text-slate-400 italic">Ketuk bintang di atas untuk memberi penilaian...</p>
+            
+            <!-- Dibungkus dengan id container agar bisa dikunci sementara saat memuat -->
+            <div id="interactive-content" class="space-y-6 disabled-section">
+                <div id="emoji-container" class="h-12 flex items-center justify-center">
+                    <div id="emoji-reaction" class="text-4xl opacity-0 transform scale-50">😊</div>
+                </div>
+                <div class="flex justify-center gap-3 py-1" id="star-container">
+                    <button onclick="handleRating(1)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
+                    <button onclick="handleRating(2)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
+                    <button onclick="handleRating(3)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
+                    <button onclick="handleRating(4)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
+                    <button onclick="handleRating(5)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
+                </div>
+                <div id="dynamic-bottom-section" class="opacity-0 min-h-[140px] bg-blue-50/30 p-3.5 rounded-2xl flex flex-col justify-center">
+                    <p class="text-xs text-slate-400 italic">Ketuk bintang di atas untuk memberi penilaian...</p>
+                </div>
             </div>
         </div>
     </div>
@@ -148,7 +155,6 @@
                         const businessEl = document.getElementById('display-business');
                         businessEl.textContent = bizName;
 
-                        // Logika ukuran font dinamis sesuai panjang karakter
                         if (bizName.length <= 12) {
                             businessEl.className = "text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-tight";
                         } else if (bizName.length <= 25) {
@@ -157,6 +163,9 @@
                             businessEl.className = "text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
                         }
 
+                        // Data sudah siap, buka kunci bintang agar bisa diklik pengguna dengan aman
+                        document.getElementById('interactive-content').classList.remove('disabled-section');
+
                     } else {
                         document.getElementById('logo-box').classList.remove('hidden');
                         document.getElementById('form-box').classList.remove('hidden');
@@ -164,6 +173,7 @@
                 })
                 .catch(() => {
                     document.getElementById('loading-box').classList.add('hidden');
+                    alert("Gagal memuat data kartu. Periksa koneksi internet Anda.");
                 });
         }
 
@@ -271,7 +281,6 @@
                 }
             }
 
-            // Kirim data bintang ke Spreadsheet (Aksi save_rating)
             let ratingPromise = fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
@@ -281,7 +290,6 @@
                 })
             });
 
-            // Kirim data statistik klik ke Spreadsheet (Aksi click_stat)
             let clickPromise = fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
@@ -291,7 +299,6 @@
                 })
             });
 
-            // Tunggu hingga kedua request selesai dikirim dengan aman ke Spreadsheet
             Promise.all([ratingPromise, clickPromise])
                 .then(() => {
                     setTimeout(() => {
@@ -311,7 +318,6 @@
                     }, 500);
                 })
                 .catch(() => {
-                    // Jika jaringan lambat/gagal, tetap arahkan pengguna agar tidak macet
                     setTimeout(() => {
                         if (destination === 'google') {
                             window.location.href = targetReviewUrl;
