@@ -115,48 +115,38 @@
 
         const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
 
+        // Mencegah cache browser saat tombol Back ditekan (Memaksa halaman refresh bersih)
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+
         if (!productId) {
             document.getElementById('loading-box').classList.add('hidden');
             document.getElementById('logo-box').classList.remove('hidden');
         } else {
-            // Cek apakah data produk sudah tersimpan di cache memori browser (Session Storage)
-            let cachedProductData = sessionStorage.getItem("product_cache_" + productId);
-
-            if (cachedProductData) {
-                // Jika ada, langsung tampilkan halaman ulasan tanpa perlu fetch ulang ke server
-                let data = JSON.parse(cachedProductData);
-                muatHalamanUlasan(data);
-            } else {
-                // Jika belum ada, lakukan fetch ke server Google Apps Script
-                fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
-                    .then(res => res.json())
-                    .then(res => {
-                        document.getElementById('loading-box').classList.add('hidden');
-                        if (res.success && res.data.status === "activated") {
-                            // Simpan ke session storage agar saat tombol Back ditekan, langsung instan terbuka
-                            sessionStorage.setItem("product_cache_" + productId, JSON.stringify(res.data));
-                            muatHalamanUlasan(res.data);
-                        } else {
-                            document.getElementById('logo-box').classList.remove('hidden');
-                            document.getElementById('form-box').classList.remove('hidden');
-                        }
-                    })
-                    .catch(() => {
-                        document.getElementById('loading-box').classList.add('hidden');
+            fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
+                .then(res => res.json())
+                .then(res => {
+                    document.getElementById('loading-box').classList.add('hidden');
+                    if (res.success && res.data.status === "activated") {
+                        targetReviewUrl = res.data.google_review_url;
+                        ownerWaLink = res.data.whatsapp_link;
+                        const ratingPage = document.getElementById('rating-page');
+                        ratingPage.classList.remove('hidden');
+                        ratingPage.classList.add('animate-page-fade-in');
+                        document.getElementById('display-business').textContent = res.data.business_name;
+                    } else {
                         document.getElementById('logo-box').classList.remove('hidden');
                         document.getElementById('form-box').classList.remove('hidden');
-                    });
-            }
-        }
-
-        function muatHalamanUlasan(data) {
-            document.getElementById('loading-box').classList.add('hidden');
-            targetReviewUrl = data.google_review_url;
-            ownerWaLink = data.whatsapp_link;
-            const ratingPage = document.getElementById('rating-page');
-            ratingPage.classList.remove('hidden');
-            ratingPage.classList.add('animate-page-fade-in');
-            document.getElementById('display-business').textContent = data.business_name;
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('loading-box').classList.add('hidden');
+                    document.getElementById('logo-box').classList.remove('hidden');
+                    document.getElementById('form-box').classList.remove('hidden');
+                });
         }
 
         function handleRating(rating) {
