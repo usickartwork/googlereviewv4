@@ -41,6 +41,7 @@
             <p id="success-desc" class="text-xs text-slate-400 max-w-xs">Mohon tunggu sebentar.</p>
         </div>
 
+        <!-- LOGO UNTUK HALAMAN AKTIVASI -->
         <div id="logo-box" class="mb-6 hidden">
             <img src="logo.png" alt="Logo Brand" class="h-20 w-auto mx-auto object-contain mb-3">
             <h1 class="text-xl font-bold text-slate-900">Aktivasi Kartu</h1>
@@ -84,10 +85,14 @@
 
         <!-- HALAMAN UTAMA ULASAN -->
         <div id="rating-page" class="hidden space-y-6">
-            <div class="text-center space-y-2 select-none">
-                <div class="w-10 h-1 bg-blue-600 mx-auto rounded-full mb-3"></div>
-                <h1 id="display-business" class="text-3xl font-extrabold text-slate-900 tracking-tight"></h1>
-                <p class="text-xs text-slate-500 font-medium px-4">Terima kasih telah berkunjung! Kami sangat menghargai dukungan Anda.</p>
+            <div class="text-center space-y-3 select-none">
+                <!-- LOGO UNTUK HALAMAN ULASAN -->
+                <img src="logo.png" alt="Logo Brand" class="h-20 w-auto mx-auto object-contain">
+                
+                <div>
+                    <h1 id="display-business" class="text-2xl font-extrabold text-slate-900 tracking-tight"></h1>
+                    <p class="text-xs text-slate-500 font-medium px-4 mt-1">Terima kasih telah berkunjung! Kami sangat menghargai dukungan Anda.</p>
+                </div>
                 <p class="text-[11px] text-blue-600 uppercase tracking-widest font-bold pt-1">Berikan Ulasan Anda</p>
             </div>
             <div id="emoji-container" class="h-12 flex items-center justify-center">
@@ -246,7 +251,6 @@
                 }
             }
 
-            // Kirim data rating ke server secara latar belakang (background)
             fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
@@ -267,20 +271,15 @@
 
             setTimeout(() => {
                 if (destination === 'google') {
-                    // Membuka Google Maps di tab yang sama agar history Back valid
                     window.location.href = targetReviewUrl;
                 } else {
-                    // Membuat teks pesan otomatis untuk WhatsApp
                     let fullWaUrl = ownerWaLink.trim();
                     if (feedbackText) {
                         let customMsg = encodeURIComponent(`Halo Kak, saya ingin memberikan masukan:\n\n"${feedbackText}"\n\nPenilaian: ${selectedStarRating} Bintang`);
                         fullWaUrl += `?text=${customMsg}`;
                     }
                     
-                    // Membuka WhatsApp di tab/jendela baru, lalu halaman ulasan otomatis merefresh dirinya sendiri ke kondisi bersih
                     window.open(fullWaUrl, '_blank');
-                    
-                    // Sembunyikan loading overlay dan refresh halaman ulasan kembali ke awal
                     overlay.classList.add('hidden');
                     window.location.reload();
                 }
