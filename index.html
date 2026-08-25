@@ -36,7 +36,7 @@
 
         /* Animasi Pop-up Overlay */
         @keyframes popUp { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .animate-pop-up { animation: popUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .animate-pop-up { animation: popUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-0 md:p-4">
@@ -58,14 +58,11 @@
             <p class="text-xs text-slate-500 mt-1">Silakan lengkapi data di bawah ini untuk menghubungkan kartu Anda.</p>
         </div>
 
-        <!-- INDIKATOR LOADING ELEGAN DENGAN TOMBOL BATAL/RELOAD JIKA LAMA -->
+        <!-- INDIKATOR LOADING ELEGAN -->
         <div id="loading-box" class="flex flex-col items-center justify-center space-y-3 py-6">
             <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spinner"></div>
             <h1 id="heading" class="text-base font-semibold text-slate-800">Memuat halaman...</h1>
             <p id="subheading" class="text-xs text-slate-400">Mohon tunggu sebentar.</p>
-            <div id="reload-prompt" class="hidden pt-2">
-                <button onclick="location.reload()" class="text-xs text-blue-600 underline font-medium">Server agak lambat, klik untuk muat ulang</button>
-            </div>
         </div>
 
         <!-- Form Aktivasi -->
@@ -96,7 +93,7 @@
 
         <!-- Halaman Utama (Rating - Full Frame Vertikal & Beraksen Biru) -->
         <div id="rating-page" class="hidden space-y-6">
-            <div class="text-center space-y-2 cursor-pointer select-none" onclick="handleAdminLoginClick()" title="Ketuk 5 kali untuk akses dashboard admin">
+            <div class="text-center space-y-2 select-none">
                 <div class="w-10 h-1 bg-blue-600 mx-auto rounded-full mb-3"></div>
                 <h1 id="display-business" class="text-3xl font-extrabold text-slate-900 tracking-tight"></h1>
                 <p class="text-xs text-slate-500 font-medium px-4">Terima kasih telah berkunjung! Kami sangat menghargai dukungan Anda.</p>
@@ -116,103 +113,24 @@
                 <p class="text-xs text-slate-400 italic">Ketuk bintang di atas untuk memberi penilaian...</p>
             </div>
         </div>
-
-        <!-- DASHBOARD ADMIN LENGKAP DENGAN STATISTIK -->
-        <div id="admin-dashboard" class="hidden space-y-6 animate-page-fade-in text-left">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div>
-                    <h2 class="text-base font-bold text-slate-900 tracking-tight">Dashboard Performa</h2>
-                    <p class="text-[11px] text-slate-500" id="dash-business-name">-</p>
-                </div>
-                <button onclick="closeAdminDashboard()" class="text-xs text-slate-500 hover:text-slate-900 font-medium bg-slate-100 px-3 py-1.5 rounded-lg">
-                    Kembali
-                </button>
-            </div>
-
-            <!-- KARTU STATISTIK UTAMA (GRID METRICS) -->
-            <div class="grid grid-cols-2 gap-3">
-                <!-- Total Pengunjung -->
-                <div class="bg-blue-50 border border-blue-100 p-3.5 rounded-2xl">
-                    <p class="text-[10px] text-blue-600 uppercase font-bold tracking-wide">Total Pengunjung</p>
-                    <p class="text-2xl font-extrabold text-slate-900 mt-1" id="stat-visitors">0</p>
-                    <p class="text-[10px] text-slate-400 mt-0.5">Orang yang tap/scan kartu</p>
-                </div>
-                <!-- Rata-rata Rating -->
-                <div class="bg-amber-50 border border-amber-100 p-3.5 rounded-2xl">
-                    <p class="text-[10px] text-amber-600 uppercase font-bold tracking-wide">Rata-Rata Rating</p>
-                    <p class="text-2xl font-extrabold text-slate-900 mt-1" id="stat-rating">0.0 <span class="text-xs font-normal text-amber-500">★</span></p>
-                    <p class="text-[10px] text-slate-400 mt-0.5">Skala kepuasan 1 - 5</p>
-                </div>
-            </div>
-
-            <!-- PERBANDINGAN ULASAN (GOOGLE VS MASUKAN PRIVAT) -->
-            <div class="bg-slate-50 border border-slate-100 p-4 rounded-2xl space-y-3">
-                <p class="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Distribusi Pengalihan Ulasan</p>
-                <div class="space-y-2">
-                    <div>
-                        <div class="flex justify-between text-xs font-medium text-slate-600 mb-1">
-                            <span>⭐ Ke Google Maps (Bintang 4-5)</span>
-                            <span id="stat-google-count" class="font-bold text-slate-900">0</span>
-                        </div>
-                        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                            <div id="bar-google" class="bg-blue-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-xs font-medium text-slate-600 mb-1">
-                            <span>💬 Masukan Privat WA (Bintang 1-3)</span>
-                            <span id="stat-private-count" class="font-bold text-slate-900">0</span>
-                        </div>
-                        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                            <div id="bar-private" class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TOMBOL RESET KARTU -->
-            <div class="pt-2">
-                <button onclick="handleSecretResetClick()" class="w-full bg-red-50 text-red-600 font-medium py-3 rounded-xl text-xs hover:bg-red-100 transition border border-red-100 flex items-center justify-center gap-2">
-                    <span>⚠️ Reset Total Data Kartu</span>
-                </button>
-            </div>
-        </div>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8ovpPR6oon-atmmC6lX8JJzn0Hg0ORCmIGoJgSqzWgIf9qJoL75wgJp6J1CHbGXKA/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYhwYTsBp7Z7ZRdCkLx6tjLGXL63hbWhPeBDP1WCUjpvJT9srnbKDWBMsA9ILGYCI/exec";
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
         let targetReviewUrl = "", ownerWaLink = "", selectedStarRating = 0;
-        let adminClickCount = 0;
-        let adminClickTimer = null;
         let lastRatingCategory = null;
 
-        const reactionEmojis = {
-            1: "😞",
-            2: "😕",
-            3: "😐",
-            4: "😊",
-            5: "🤩"
-        };
-
-        // Pengaman Timeout: Jika dalam 6 detik server Google tidak merespons, tampilkan tombol reload
-        const loadTimeout = setTimeout(() => {
-            const loadingBox = document.getElementById('loading-box');
-            if (!loadingBox.classList.contains('hidden')) {
-                document.getElementById('reload-prompt').classList.remove('hidden');
-            }
-        }, 6000);
+        const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
 
         if (!productId) {
-            clearTimeout(loadTimeout);
             document.getElementById('loading-box').classList.add('hidden');
             document.getElementById('logo-box').classList.remove('hidden');
         } else {
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
                 .then(res => res.json())
                 .then(res => {
-                    clearTimeout(loadTimeout);
                     document.getElementById('loading-box').classList.add('hidden');
                     if (res.success && res.data.status === "activated") {
                         targetReviewUrl = res.data.google_review_url;
@@ -221,101 +139,15 @@
                         ratingPage.classList.remove('hidden');
                         ratingPage.classList.add('animate-page-fade-in');
                         document.getElementById('display-business').textContent = res.data.business_name;
-                        document.getElementById('dash-business-name').textContent = res.data.business_name;
                     } else {
                         document.getElementById('logo-box').classList.remove('hidden');
                         document.getElementById('form-box').classList.remove('hidden');
                     }
                 })
                 .catch(() => {
-                    clearTimeout(loadTimeout);
                     document.getElementById('loading-box').classList.add('hidden');
                     document.getElementById('logo-box').classList.remove('hidden');
                     document.getElementById('form-box').classList.remove('hidden');
-                });
-        }
-
-        function handleAdminLoginClick() {
-            adminClickCount++;
-            if (adminClickTimer) clearTimeout(adminClickTimer);
-            adminClickTimer = setTimeout(() => { adminClickCount = 0; }, 2000);
-
-            if (adminClickCount >= 5) {
-                adminClickCount = 0;
-                clearTimeout(adminClickTimer);
-                
-                const pin = prompt("🔐 Dashboard Admin\nMasukkan PIN keamanan kartu:");
-                if (pin === null || !pin.trim()) return;
-
-                const overlay = document.getElementById('success-overlay');
-                document.getElementById('success-title').textContent = "Memuat Dashboard...";
-                document.getElementById('success-desc').textContent = "Mengambil data statistik.";
-                overlay.classList.remove('hidden');
-
-                fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}&pin=${encodeURIComponent(pin)}`)
-                    .then(res => res.json())
-                    .then(result => {
-                        overlay.classList.add('hidden');
-                        if (result.success && result.stats) {
-                            document.getElementById('stat-visitors').textContent = result.stats.total_visitors || 0;
-                            document.getElementById('stat-rating').textContent = (result.stats.avg_rating || 5.0).toFixed(1);
-                            
-                            const googleCount = result.stats.google_clicks || 0;
-                            const privateCount = result.stats.private_clicks || 0;
-                            const totalUlasan = googleCount + privateCount;
-
-                            document.getElementById('stat-google-count').textContent = googleCount;
-                            document.getElementById('stat-private-count').textContent = privateCount;
-
-                            if (totalUlasan > 0) {
-                                document.getElementById('bar-google').style.width = Math.round((googleCount / totalUlasan) * 100) + '%';
-                                document.getElementById('bar-private').style.width = Math.round((privateCount / totalUlasan) * 100) + '%';
-                            }
-
-                            document.getElementById('rating-page').classList.add('hidden');
-                            document.getElementById('admin-dashboard').classList.remove('hidden');
-                        } else {
-                            alert("PIN salah atau gagal memuat data!");
-                        }
-                    })
-                    .catch(() => {
-                        overlay.classList.add('hidden');
-                        alert("Terjadi kesalahan jaringan atau verifikasi PIN.");
-                    });
-            }
-        }
-
-        function closeAdminDashboard() {
-            document.getElementById('admin-dashboard').classList.add('hidden');
-            document.getElementById('rating-page').classList.remove('hidden');
-        }
-
-        function handleSecretResetClick() {
-            const pin = prompt("⚠️ KONFIRMASI RESET\nMasukkan PIN keamanan untuk mereset kartu ini:");
-            if (pin === null || !pin.trim()) return;
-
-            const overlay = document.getElementById('success-overlay');
-            document.getElementById('success-title').textContent = "Sedang mereset kartu...";
-            document.getElementById('success-desc').textContent = "Mohon tunggu sebentar.";
-            overlay.classList.remove('hidden');
-
-            fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "reset", product_id: productId, pin: pin })
-            })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        alert("PIN benar! Kartu berhasil direset.");
-                        location.reload();
-                    } else {
-                        overlay.classList.add('hidden');
-                        alert("Gagal: " + (result.message || "PIN salah!"));
-                    }
-                })
-                .catch(() => {
-                    overlay.classList.add('hidden');
-                    alert("Terjadi kesalahan jaringan.");
                 });
         }
 
@@ -385,8 +217,6 @@
             const titleEl = document.getElementById('success-title');
             const descEl = document.getElementById('success-desc');
 
-            let clickType = (destination === 'google') ? 'google' : 'private';
-
             if (destination === 'google') {
                 titleEl.textContent = "Sedang mengarahkan ke ulasan...";
                 descEl.textContent = "Membuka halaman Google Maps.";
@@ -400,14 +230,6 @@
             if (destination === 'google' && typeof confetti === 'function') {
                 confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
             }
-
-            try {
-                navigator.sendBeacon(SCRIPT_URL, JSON.stringify({ 
-                    action: "track_click", 
-                    product_id: productId, 
-                    type: clickType 
-                }));
-            } catch (e) {}
 
             setTimeout(() => {
                 if (destination === 'google') {
@@ -428,9 +250,13 @@
             }
 
             const overlay = document.getElementById('success-overlay');
-            document.getElementById('success-title').textContent = "Sedang mengaktifkan kartu...";
-            document.getElementById('success-desc').textContent = "Mohon tunggu sebentar.";
+            document.getElementById('success-title').textContent = "Aktivasi Berhasil!";
+            document.getElementById('success-desc').textContent = "Kartu Anda kini sudah siap digunakan.";
             overlay.classList.remove('hidden');
+
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
+            }
 
             const data = { 
                 action: "activate", 
@@ -447,9 +273,6 @@
             })
                 .then(res => res.json())
                 .then(result => {
-                    if (typeof confetti === 'function') {
-                        confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
-                    }
                     setTimeout(() => { location.reload(); }, 1000);
                 })
                 .catch(() => { location.reload(); });
