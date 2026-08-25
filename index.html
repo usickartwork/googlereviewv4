@@ -119,27 +119,44 @@
             document.getElementById('loading-box').classList.add('hidden');
             document.getElementById('logo-box').classList.remove('hidden');
         } else {
-            fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
-                .then(res => res.json())
-                .then(res => {
-                    document.getElementById('loading-box').classList.add('hidden');
-                    if (res.success && res.data.status === "activated") {
-                        targetReviewUrl = res.data.google_review_url;
-                        ownerWaLink = res.data.whatsapp_link;
-                        const ratingPage = document.getElementById('rating-page');
-                        ratingPage.classList.remove('hidden');
-                        ratingPage.classList.add('animate-page-fade-in');
-                        document.getElementById('display-business').textContent = res.data.business_name;
-                    } else {
+            // Cek apakah data produk sudah tersimpan di cache memori browser (Session Storage)
+            let cachedProductData = sessionStorage.getItem("product_cache_" + productId);
+
+            if (cachedProductData) {
+                // Jika ada, langsung tampilkan halaman ulasan tanpa perlu fetch ulang ke server
+                let data = JSON.parse(cachedProductData);
+                muatHalamanUlasan(data);
+            } else {
+                // Jika belum ada, lakukan fetch ke server Google Apps Script
+                fetch(`${SCRIPT_URL}?action=get_product&product_id=${productId}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        document.getElementById('loading-box').classList.add('hidden');
+                        if (res.success && res.data.status === "activated") {
+                            // Simpan ke session storage agar saat tombol Back ditekan, langsung instan terbuka
+                            sessionStorage.setItem("product_cache_" + productId, JSON.stringify(res.data));
+                            muatHalamanUlasan(res.data);
+                        } else {
+                            document.getElementById('logo-box').classList.remove('hidden');
+                            document.getElementById('form-box').classList.remove('hidden');
+                        }
+                    })
+                    .catch(() => {
+                        document.getElementById('loading-box').classList.add('hidden');
                         document.getElementById('logo-box').classList.remove('hidden');
                         document.getElementById('form-box').classList.remove('hidden');
-                    }
-                })
-                .catch(() => {
-                    document.getElementById('loading-box').classList.add('hidden');
-                    document.getElementById('logo-box').classList.remove('hidden');
-                    document.getElementById('form-box').classList.remove('hidden');
-                });
+                    });
+            }
+        }
+
+        function muatHalamanUlasan(data) {
+            document.getElementById('loading-box').classList.add('hidden');
+            targetReviewUrl = data.google_review_url;
+            ownerWaLink = data.whatsapp_link;
+            const ratingPage = document.getElementById('rating-page');
+            ratingPage.classList.remove('hidden');
+            ratingPage.classList.add('animate-page-fade-in');
+            document.getElementById('display-business').textContent = data.business_name;
         }
 
         function handleRating(rating) {
@@ -203,11 +220,10 @@
             }
         }
 
-        // Fungsi Pintar: Mengubah nomor HP (08xx atau 62xx) menjadi link format https://wa.me/62...
         function formatWhatsAppLink(input) {
-            let cleaned = input.replace(/\D/g, ''); // Hapus semua karakter selain angka
+            let cleaned = input.replace(/\D/g, ''); 
             if (cleaned.startsWith('0')) {
-                cleaned = '62' + cleaned.substring(1); // Ubah awalan 0 menjadi 62
+                cleaned = '62' + cleaned.substring(1); 
             }
             return 'https://wa.me/' + cleaned;
         }
@@ -276,7 +292,6 @@
                 return;
             }
 
-            // Otomatis mengubah nomor HP yang diinput menjadi format link direct WhatsApp
             const formattedWaLink = formatWhatsAppLink(rawWaInput);
 
             const overlay = document.getElementById('success-overlay');
@@ -294,7 +309,7 @@
                 google_review_url: reviewUrl, 
                 business_name: document.getElementById('business-name').value, 
                 pin: document.getElementById('card-pin').value, 
-                whatsapp_link: formattedWaLink // Mengirim link yang sudah otomatis diformat
+                whatsapp_link: formattedWaLink 
             };
 
             fetch(SCRIPT_URL, {
