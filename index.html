@@ -90,7 +90,6 @@
                 <img src="logo.png" alt="Logo Brand" class="h-20 w-auto mx-auto object-contain">
                 
                 <div>
-                    <!-- Nama Bisnis (Ukuran menyesuaikan otomatis lewat script JS) -->
                     <h1 id="display-business" class="font-extrabold text-slate-900 tracking-tight px-2 break-words"></h1>
                     <p class="text-xs text-slate-500 font-medium px-4 mt-1.5">Terima kasih telah berkunjung! Kami sangat menghargai dukungan Anda.</p>
                 </div>
@@ -142,20 +141,15 @@
                         ratingPage.classList.remove('hidden');
                         ratingPage.classList.add('animate-page-fade-in');
                         
-                        // Menampilkan Nama Bisnis & Mengatur Ukuran Font Secara Otomatis
                         const bizName = res.data.business_name || "";
                         const businessEl = document.getElementById('display-business');
                         businessEl.textContent = bizName;
 
-                        // Logika Ukuran Berdasarkan Panjang Karakter
                         if (bizName.length <= 12) {
-                            // Nama Pendek -> Tampil sangat besar dan jelas
                             businessEl.className = "text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-tight";
                         } else if (bizName.length <= 25) {
-                            // Nama Sedang -> Ukuran menengah
                             businessEl.className = "text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
                         } else {
-                            // Nama Panjang (seperti Bakso & Bakmie Asia Bangsa) -> Ukuran pas agar turun baris dengan rapi dan tidak terlalu kecil
                             businessEl.className = "text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
                         }
 
@@ -323,8 +317,9 @@
             const overlay = document.getElementById('success-overlay');
             document.getElementById('success-title').textContent = "Aktivasi Berhasil!";
             document.getElementById('success-desc').textContent = "Kartu Anda kini sudah siap digunakan.";
-            overlay.classList.add('hidden');
+            overlay.classList.remove('hidden');
 
+            // Konfeti HANYA dipanggil saat tombol aktivasi ditekan sukses
             if (typeof confetti === 'function') {
                 confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
             }
