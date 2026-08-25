@@ -319,11 +319,6 @@
             document.getElementById('success-desc').textContent = "Kartu Anda kini sudah siap digunakan.";
             overlay.classList.remove('hidden');
 
-            // Konfeti HANYA dipanggil saat tombol aktivasi ditekan sukses
-            if (typeof confetti === 'function') {
-                confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
-            }
-
             const data = { 
                 action: "activate", 
                 product_id: productId, 
@@ -339,7 +334,16 @@
             })
                 .then(res => res.json())
                 .then(result => {
-                    setTimeout(() => { location.reload(); }, 1000);
+                    // Berikan jeda sebentar (600ms) agar teks loading "Aktivasi Berhasil" terbaca dulu, baru muncullah konfeti tepat sebelum reload
+                    setTimeout(() => {
+                        if (typeof confetti === 'function') {
+                            confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
+                        }
+                    }, 400);
+
+                    setTimeout(() => { 
+                        location.reload(); 
+                    }, 1200);
                 })
                 .catch(() => { location.reload(); });
         }
