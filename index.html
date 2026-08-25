@@ -142,14 +142,13 @@
                         ratingPage.classList.add('animate-page-fade-in');
                         document.getElementById('display-business').textContent = res.data.business_name;
                     } else {
+                        // Hanya munculkan form aktivasi jika server fix menyatakan belum aktif
                         document.getElementById('logo-box').classList.remove('hidden');
                         document.getElementById('form-box').classList.remove('hidden');
                     }
                 })
                 .catch(() => {
                     document.getElementById('loading-box').classList.add('hidden');
-                    document.getElementById('logo-box').classList.remove('hidden');
-                    document.getElementById('form-box').classList.remove('hidden');
                 });
         }
 
