@@ -126,9 +126,9 @@
 
         const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
 
-        // WAJIB BERSIH DARI CACHE: Paksa ambil data terbaru langsung dari server tanpa menggunakan cache lama
+        // PENGAMAN BERSIH TANPA LOOPING REFRESH: Hanya menutup overlay loading jika kembali dari riwayat cache
         window.addEventListener('pageshow', function(event) {
-            window.location.reload(true);
+            document.getElementById('success-overlay').classList.add('hidden');
         });
 
         if (!productId) {
@@ -140,7 +140,7 @@
         }
 
         function loadProductData(id, retryCount) {
-            // Tambahkan parameter acak (?t=...) agar browser tidak mengambil data dari cache lama
+            // Menggunakan parameter waktu unik (?t=...) agar selalu menarik status terbaru dari spreadsheet tanpa tersendat cache
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(id)}&t=${new Date().getTime()}`)
                 .then(res => res.json())
                 .then(res => {
@@ -169,7 +169,7 @@
                         document.getElementById('interactive-content').classList.remove('disabled-section');
 
                     } else {
-                        // Jika status unactivated (setelah di-reset), paksa tampilkan menu aktivasi
+                        // Jika status unactivated (setelah di-reset di dashboard owner), langsung tampilkan form aktivasi dengan mulus
                         document.getElementById('logo-box').classList.remove('hidden');
                         document.getElementById('form-box').classList.remove('hidden');
                     }
