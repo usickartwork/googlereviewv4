@@ -126,12 +126,16 @@
 
         const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
 
-        // PENGAMAN: Begitu halaman dibuka kembali atau difokuskan, sembunyikan paksa overlay loading agar tidak stuck
-        window.addEventListener('pageshow', function() {
+        // PERIKSA STATUS SAAT HALAMAN DIBUKA KEMBALI (FOKUS)
+        window.addEventListener('focus', function() {
             document.getElementById('success-overlay').classList.add('hidden');
+            if (sessionStorage.getItem("review_submitted") === "true") {
+                sessionStorage.removeItem("review_submitted");
+                window.location.reload(true);
+            }
         });
 
-        window.addEventListener('focus', function() {
+        window.addEventListener('pageshow', function(event) {
             document.getElementById('success-overlay').classList.add('hidden');
             if (sessionStorage.getItem("review_submitted") === "true") {
                 sessionStorage.removeItem("review_submitted");
@@ -294,6 +298,7 @@
                 confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
             }
 
+            // SET TANDA BAHWA ULASAN SUDAH DIKIRIM
             sessionStorage.setItem("review_submitted", "true");
 
             navigator.sendBeacon(SCRIPT_URL, JSON.stringify({ action: "save_rating", product_id: productId, rating: selectedStarRating }));
