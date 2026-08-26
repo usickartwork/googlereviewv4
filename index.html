@@ -38,10 +38,10 @@
 
     <div id="main-container" class="w-full max-w-md min-h-screen md:min-h-0 bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center relative overflow-hidden">
         
-        <!-- OVERLAY LOADING AMAN -->
+        <!-- OVERLAY LOADING KILAT -->
         <div id="success-overlay" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-6 text-center animate-pop-up">
             <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spinner mb-4"></div>
-            <h2 id="success-title" class="text-base font-bold text-slate-900 mb-1">Menyimpan ulasan...</h2>
+            <h2 id="success-title" class="text-base font-bold text-slate-900 mb-1">Memproses...</h2>
             <p id="success-desc" class="text-xs text-slate-400 max-w-xs">Mohon tunggu sebentar.</p>
         </div>
 
@@ -278,20 +278,21 @@
             const descEl = document.getElementById('success-desc');
 
             if (destination === 'google') {
-                titleEl.textContent = "Menyimpan ulasan...";
+                titleEl.textContent = "Terima kasih!";
                 descEl.textContent = "Mengarahkan ke Google Maps...";
                 if (typeof confetti === 'function') {
                     confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
                 }
             } else {
-                titleEl.textContent = "Menyimpan masukan...";
+                titleEl.textContent = "Terima kasih!";
                 descEl.textContent = "Membuka WhatsApp...";
             }
             overlay.classList.remove('hidden');
 
             sessionStorage.setItem("review_submitted", "true");
 
-            let ratingPromise = fetch(SCRIPT_URL, {
+            // Kirim data ke server secara latar belakang (background sync) tanpa waktu tunggu lama
+            fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
                     action: "save_rating",
@@ -300,7 +301,7 @@
                 })
             });
 
-            let clickPromise = fetch(SCRIPT_URL, {
+            fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
                     action: "click_stat",
@@ -309,25 +310,14 @@
                 })
             });
 
-            Promise.all([ratingPromise, clickPromise])
-                .then(() => {
-                    setTimeout(() => {
-                        if (destination === 'google') {
-                            window.location.href = targetReviewUrl;
-                        } else {
-                            window.location.href = fullWaUrl;
-                        }
-                    }, 1200);
-                })
-                .catch(() => {
-                    setTimeout(() => {
-                        if (destination === 'google') {
-                            window.location.href = targetReviewUrl;
-                        } else {
-                            window.location.href = fullWaUrl;
-                        }
-                    }, 1200);
-                });
+            // Langsung alihkan halaman dengan mulus dan cepat
+            setTimeout(() => {
+                if (destination === 'google') {
+                    window.location.href = targetReviewUrl;
+                } else {
+                    window.location.href = fullWaUrl;
+                }
+            }, 400);
         }
 
         function activateCard() {
