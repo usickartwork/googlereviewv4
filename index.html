@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Review & Rating</title>
+    <title>Google Review Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease; }
@@ -32,7 +32,7 @@
             <p class="text-xs text-slate-500">Menghubungkan ke kartu NFC Anda.</p>
         </div>
 
-        <!-- HALAMAN UTAMA REVIEW (JIKA SUDAH AKTIF) -->
+        <!-- HALAMAN UTAMA REVIEW (JIKA KARTU SUDAH AKTIF) -->
         <div id="reviewScreen" class="hidden space-y-6 animate-page-fade-in">
             <div class="space-y-2">
                 <img src="logo.png" alt="Logo Brand" class="h-20 w-auto mx-auto object-contain mb-3">
@@ -64,40 +64,40 @@
             </div>
         </div>
 
-        <!-- HALAMAN AKTIVASI KARTU (JIKA KARTU BELUM AKTIF / UNACTIVATED) -->
+        <!-- HALAMAN AKTIVASI KARTU (JIKA KARTU BELUM AKTIF) -->
         <div id="activateScreen" class="hidden space-y-4 text-left animate-page-fade-in">
-            <div class="text-center mb-4">
-                <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl font-bold">!</div>
-                <h2 class="text-lg font-bold text-slate-900">Kartu Belum Diaktifkan</h2>
-                <p class="text-xs text-slate-500 mt-1">Silakan atur data bisnis Anda untuk mengaktifkan kartu NFC ini.</p>
+            <div class="text-center mb-6">
+                <img src="logo.png" alt="Logo Brand" class="h-20 w-auto mx-auto object-contain mb-3">
+                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Aktivasi Kartu NFC</h1>
+                <p class="text-xs text-slate-500 mt-1">Masukkan data bisnis Anda untuk menghubungkan kartu ini.</p>
             </div>
 
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">ID Kartu</label>
-                <input type="text" id="actCardId" disabled class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs bg-slate-100 uppercase font-bold text-slate-500">
+                <input type="text" id="actCardId" disabled class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-100 uppercase font-bold text-slate-500">
             </div>
 
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Link Google Review (Maps)</label>
-                <input type="text" id="actReviewUrl" placeholder="https://g.page/r/..." class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none">
+                <input type="text" id="actReviewUrl" placeholder="https://g.page/r/..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
             </div>
 
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Bisnis</label>
-                <input type="text" id="actBusinessName" placeholder="Contoh: Cafe Maju Jaya" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none">
+                <input type="text" id="actBusinessName" placeholder="Contoh: Cafe Maju Jaya" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
             </div>
 
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor WhatsApp (Untuk Masukan Private)</label>
-                <input type="text" id="actWaLink" placeholder="628123456789 atau https://wa.me/..." class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none">
+                <input type="text" id="actWaLink" placeholder="628123456789 atau https://wa.me/..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
             </div>
 
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">PIN Keamanan (Untuk Reset & Dashboard)</label>
-                <input type="password" id="actPin" placeholder="••••" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none">
+                <input type="password" id="actPin" placeholder="••••" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
             </div>
 
-            <button onclick="executeActivation()" id="btnActivate" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl text-xs transition shadow-sm mt-2 btn-modern">
+            <button onclick="executeActivation()" id="btnActivate" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition shadow-sm mt-2 btn-modern">
                 Aktivasi Kartu Sekarang
             </button>
         </div>
@@ -105,7 +105,7 @@
     </div>
 
     <script>
-        // GANTI DENGAN URL WEB APP SKRIP WEB 1 ANDA
+        // MASUKKAN URL WEB APP SKRIP WEB 1 ANDA DI SINI
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCV2-_bBSOJ0QqiW2Zu0zUViO-T42IAihhF_-LSiwqRT26i0-3QZdKTmMC8VW1ovHH/exec";
         
         let urlParams = new URLSearchParams(window.location.search);
@@ -120,7 +120,6 @@
                 return;
             }
 
-            // Ambil data kartu dari Google Apps Script
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(productId)}`)
                 .then(res => res.json())
                 .then(res => {
@@ -155,7 +154,6 @@
         };
 
         function submitRating(ratingVal) {
-            // Berikan efek visual bintang terpilih
             let stars = document.getElementById("starContainer").children;
             for (let i = 0; i < stars.length; i++) {
                 if (i < ratingVal) {
@@ -168,7 +166,6 @@
             }
             document.getElementById("ratingFeedback").innerText = `Terima kasih! Penilaian ${ratingVal} Bintang dicatat.`;
 
-            // Kirim data rating ke server
             fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({ action: "save_rating", product_id: productId, rating: ratingVal })
