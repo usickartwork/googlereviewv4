@@ -126,12 +126,16 @@
 
         const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
 
-        // PENGAMAN UTAMA: Jika halaman kembali dari riwayat (tombol back browser), langsung bersihkan loading dan reload bersih
+        // PENGAMAN BERSIH: Paksa sembunyikan overlay saat halaman dimuat atau di-focus kembali dari riwayat cache
         window.addEventListener('pageshow', function(event) {
+            document.getElementById('success-overlay').classList.add('hidden');
             if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-                document.getElementById('success-overlay').classList.add('hidden');
                 window.location.reload(true);
             }
+        });
+
+        window.addEventListener('focus', function() {
+            document.getElementById('success-overlay').classList.add('hidden');
         });
 
         if (!productId) {
@@ -143,6 +147,8 @@
         }
 
         function loadProductData(id, retryCount) {
+            document.getElementById('success-overlay').classList.add('hidden'); // Pastikan overlay tertutup aman
+
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(id)}`)
                 .then(res => res.json())
                 .then(res => {
