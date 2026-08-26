@@ -31,8 +31,6 @@
         .animate-pop-up { animation: popUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
         .btn-modern:active { transform: scale(0.97); }
-        
-        /* Efek nonaktif sebelum data siap */
         .disabled-section { opacity: 0.4; pointer-events: none; }
     </style>
 </head>
@@ -95,14 +93,12 @@
                 <img src="logo.png" alt="Logo Brand" class="h-20 w-auto mx-auto object-contain">
                 
                 <div>
-                    <!-- Nama Bisnis dengan ukuran otomatis & spasi rapat (leading-snug) -->
                     <h1 id="display-business" class="font-extrabold text-slate-900 tracking-tight px-2 break-words"></h1>
                     <p class="text-xs text-slate-500 font-medium px-4 mt-1.5">Terima kasih telah berkunjung! Kami sangat menghargai dukungan Anda.</p>
                 </div>
                 <p class="text-[11px] text-blue-600 uppercase tracking-widest font-bold pt-1">Berikan Ulasan Anda</p>
             </div>
             
-            <!-- Dibungkus dengan id container agar bisa dikunci sementara saat memuat -->
             <div id="interactive-content" class="space-y-6 disabled-section">
                 <div id="emoji-container" class="h-12 flex items-center justify-center">
                     <div id="emoji-reaction" class="text-4xl opacity-0 transform scale-50">😊</div>
@@ -130,10 +126,18 @@
 
         const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
 
-        // PENGAMAN UTAMA: Memastikan halaman langsung refresh total jika dibuka kembali dari memori cache browser (tombol back)
+        // PENGAMAN REFRESH TOTAL: Memaksa reload bersih saat halaman dibuka kembali (termasuk tombol back)
         window.addEventListener('pageshow', function(event) {
             if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-                window.location.reload();
+                window.location.reload(true);
+            }
+        });
+
+        // Deteksi tambahan saat fokus kembali ke tab/browser
+        window.addEventListener('focus', function() {
+            if (sessionStorage.getItem("review_submitted") === "true") {
+                sessionStorage.removeItem("review_submitted");
+                window.location.reload(true);
             }
         });
 
@@ -164,7 +168,6 @@
                             businessEl.className = "text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
                         }
 
-                        // Data sudah siap, buka kunci bintang agar bisa diklik pengguna dengan aman
                         document.getElementById('interactive-content').classList.remove('disabled-section');
 
                     } else {
@@ -248,6 +251,29 @@
         }
 
         function triggerSuccessAnimation(destination) {
+            const btnSubmit = document.getElementById('btnSubmitReview');
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.innerText = "Memproses...";
+            }
+
+            // Tampilkan animasi loading terlebih dahulu agar pengalaman pengguna konsisten
+            const overlay = document.getElementById('success-overlay');
+            const titleEl = document.getElementById('success-title');
+            const descEl = document.getElementById('success-desc');
+
+            if (destination === 'google') {
+                titleEl.textContent = "Sedang mengarahkan ke ulasan...";
+                descEl.textContent = "Membuka halaman Google Maps.";
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
+                }
+            } else {
+                titleEl.textContent = "Menyiapkan pesan WhatsApp...";
+                descEl.textContent = "Membuka aplikasi WhatsApp.";
+            }
+            overlay.classList.remove('hidden');
+
             let clickType = (destination === 'google') ? 'maps' : 'wa';
             let feedbackText = "";
             let fullWaUrl = ownerWaLink.trim();
@@ -261,31 +287,9 @@
                     let customMsg = encodeURIComponent(`Halo Kak, saya ingin memberikan masukan:\n\n"${feedbackText}"\n\nPenilaian: ${selectedStarRating} Bintang`);
                     fullWaUrl += `?text=${customMsg}`;
                 }
-
-                // Membuka WhatsApp secara instan tanpa terhalang popup blocker browser HP
-                let tempLink = document.createElement('a');
-                tempLink.href = fullWaUrl;
-                tempLink.target = '_blank';
-                document.body.appendChild(tempLink);
-                tempLink.click();
-                document.body.removeChild(tempLink);
             }
 
-            const overlay = document.getElementById('success-overlay');
-            const titleEl = document.getElementById('success-title');
-            const descEl = document.getElementById('success-desc');
-
-            if (destination === 'google') {
-                titleEl.textContent = "Sedang mengarahkan ke ulasan...";
-                descEl.textContent = "Membuka halaman Google Maps.";
-                overlay.classList.remove('hidden');
-
-                if (typeof confetti === 'function') {
-                    confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
-                }
-            }
-
-            // Kirim data rating & statistik ke Google Sheets di latar belakang secara diam-diam
+            // Kirim data ke Google Sheets di latar belakang
             let ratingPromise = fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
@@ -304,18 +308,29 @@
                 })
             });
 
+            // Beri jeda 800ms agar animasi loading terlihat mulus, baru arahkan ke link tujuan
             Promise.all([ratingPromise, clickPromise])
                 .then(() => {
-                    if (destination === 'google') {
-                        setTimeout(() => {
+                    setTimeout(() => {
+                        sessionStorage.setItem("review_submitted", "true");
+                        if (destination === 'google') {
                             window.location.href = targetReviewUrl;
-                        }, 500);
-                    }
+                        } else {
+                            overlay.classList.add('hidden');
+                            window.location.href = fullWaUrl;
+                        }
+                    }, 800);
                 })
                 .catch(() => {
-                    if (destination === 'google') {
-                        window.location.href = targetReviewUrl;
-                    }
+                    setTimeout(() => {
+                        sessionStorage.setItem("review_submitted", "true");
+                        if (destination === 'google') {
+                            window.location.href = targetReviewUrl;
+                        } else {
+                            overlay.classList.add('hidden');
+                            window.location.href = fullWaUrl;
+                        }
+                    }, 800);
                 });
         }
 
