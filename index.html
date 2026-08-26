@@ -144,50 +144,63 @@
             document.getElementById('logo-box').classList.remove('hidden');
             document.getElementById('form-box').classList.remove('hidden');
         } else {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 6000);
+            // Fungsi Fetch dengan Retry Otomatis (Mencegah mental ke aktivasi jika server lambat)
+            function fetchWithRetry(id, retries) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-            fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(productId)}&t=${new Date().getTime()}`, { signal: controller.signal })
-                .then(res => res.json())
-                .then(res => {
-                    clearTimeout(timeoutId);
-                    document.getElementById('loading-box').classList.add('hidden');
-                    
-                    let cardData = (res.success && res.data) ? res.data : null;
-                    let cardStatus = cardData ? String(cardData.status || "").trim().toLowerCase() : "";
+                fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(id)}&t=${new Date().getTime()}`, { signal: controller.signal })
+                    .then(res => res.json())
+                    .then(res => {
+                        clearTimeout(timeoutId);
+                        let cardData = (res.success && res.data) ? res.data : null;
+                        let cardStatus = cardData ? String(cardData.status || "").trim().toLowerCase() : "";
 
-                    if (cardStatus === "activated") {
-                        targetReviewUrl = cardData.google_review_url || "";
-                        ownerWaLink = cardData.whatsapp_link || "";
-                        
-                        const ratingPage = document.getElementById('rating-page');
-                        ratingPage.classList.remove('hidden');
-                        ratingPage.classList.add('animate-page-fade-in');
-                        
-                        const bizName = cardData.business_name || "Nama Bisnis";
-                        const businessEl = document.getElementById('display-business');
-                        businessEl.textContent = bizName;
+                        if (cardStatus === "activated") {
+                            document.getElementById('loading-box').classList.add('hidden');
+                            targetReviewUrl = cardData.google_review_url || "";
+                            ownerWaLink = cardData.whatsapp_link || "";
+                            
+                            const ratingPage = document.getElementById('rating-page');
+                            ratingPage.classList.remove('hidden');
+                            ratingPage.classList.add('animate-page-fade-in');
+                            
+                            const bizName = cardData.business_name || "Nama Bisnis";
+                            const businessEl = document.getElementById('display-business');
+                            businessEl.textContent = bizName;
 
-                        if (bizName.length <= 12) {
-                            businessEl.className = "text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-tight";
-                        } else if (bizName.length <= 25) {
-                            businessEl.className = "text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
+                            if (bizName.length <= 12) {
+                                businessEl.className = "text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-tight";
+                            } else if (bizName.length <= 25) {
+                                businessEl.className = "text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
+                            } else {
+                                businessEl.className = "text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
+                            }
+
+                            document.getElementById('interactive-content').classList.remove('disabled-section');
                         } else {
-                            businessEl.className = "text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
+                            if (retries > 0) {
+                                setTimeout(() => fetchWithRetry(id, retries - 1), 1000);
+                            } else {
+                                document.getElementById('loading-box').classList.add('hidden');
+                                document.getElementById('logo-box').classList.remove('hidden');
+                                document.getElementById('form-box').classList.remove('hidden');
+                            }
                         }
+                    })
+                    .catch(() => {
+                        clearTimeout(timeoutId);
+                        if (retries > 0) {
+                            setTimeout(() => fetchWithRetry(id, retries - 1), 1000);
+                        } else {
+                            document.getElementById('loading-box').classList.add('hidden');
+                            document.getElementById('logo-box').classList.remove('hidden');
+                            document.getElementById('form-box').classList.remove('hidden');
+                        }
+                    });
+            }
 
-                        document.getElementById('interactive-content').classList.remove('disabled-section');
-                    } else {
-                        document.getElementById('logo-box').classList.remove('hidden');
-                        document.getElementById('form-box').classList.remove('hidden');
-                    }
-                })
-                .catch(() => {
-                    clearTimeout(timeoutId);
-                    document.getElementById('loading-box').classList.add('hidden');
-                    document.getElementById('logo-box').classList.remove('hidden');
-                    document.getElementById('form-box').classList.remove('hidden');
-                });
+            fetchWithRetry(productId, 1);
         }
 
         function handleRating(rating) {
@@ -284,7 +297,6 @@
 
             sessionStorage.setItem("review_submitted", "true");
 
-            // PENGIRIMAN INSTAN DI LATAR BELAKANG (NON-BLOCKING)
             navigator.sendBeacon(SCRIPT_URL, JSON.stringify({ action: "save_rating", product_id: productId, rating: selectedStarRating }));
             navigator.sendBeacon(SCRIPT_URL, JSON.stringify({ action: "click_stat", product_id: productId, type: clickType }));
 
