@@ -144,13 +144,14 @@
             document.getElementById('logo-box').classList.remove('hidden');
             document.getElementById('form-box').classList.remove('hidden');
         } else {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 7000);
+            loadProductData(productId, 0);
+        }
 
-            fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(productId)}`, { signal: controller.signal })
+        // Fungsi dengan sistem percobaan ulang otomatis (Auto-Retry) jika fetch pertama lambat/gagal
+        function loadProductData(id, retryCount) {
+            fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(id)}`)
                 .then(res => res.json())
                 .then(res => {
-                    clearTimeout(timeoutId);
                     document.getElementById('loading-box').classList.add('hidden');
                     
                     if (res.success && res.data && res.data.status === "activated") {
@@ -176,15 +177,29 @@
                         document.getElementById('interactive-content').classList.remove('disabled-section');
 
                     } else {
-                        document.getElementById('logo-box').classList.remove('hidden');
-                        document.getElementById('form-box').classList.remove('hidden');
+                        // Jika percobaan belum mencapai 2 kali dan status unactivated, coba 1 kali lagi secara otomatis (mengatasi delay server)
+                        if (retryCount < 2) {
+                            document.getElementById('loading-box').classList.remove('hidden');
+                            setTimeout(() => {
+                                loadProductData(id, retryCount + 1);
+                            }, 800);
+                        } else {
+                            document.getElementById('logo-box').classList.remove('hidden');
+                            document.getElementById('form-box').classList.remove('hidden');
+                        }
                     }
                 })
                 .catch(() => {
-                    clearTimeout(timeoutId);
-                    document.getElementById('loading-box').classList.add('hidden');
-                    document.getElementById('logo-box').classList.remove('hidden');
-                    document.getElementById('form-box').classList.remove('hidden');
+                    // Jika jaringan terputus sesaat, coba ulangi otomatis hingga 2 kali
+                    if (retryCount < 2) {
+                        setTimeout(() => {
+                            loadProductData(id, retryCount + 1);
+                        }, 1000);
+                    } else {
+                        document.getElementById('loading-box').classList.add('hidden');
+                        document.getElementById('logo-box').classList.remove('hidden');
+                        document.getElementById('form-box').classList.remove('hidden');
+                    }
                 });
         }
 
@@ -291,7 +306,6 @@
 
             sessionStorage.setItem("review_submitted", "true");
 
-            // Kirim data ke server secara latar belakang (background sync) tanpa waktu tunggu lama
             fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
@@ -310,7 +324,6 @@
                 })
             });
 
-            // Langsung alihkan halaman dengan mulus dan cepat
             setTimeout(() => {
                 if (destination === 'google') {
                     window.location.href = targetReviewUrl;
