@@ -136,7 +136,6 @@
             document.getElementById('success-overlay').classList.add('hidden');
         });
 
-        // Munculkan tombol retry darurat jika proses memuat lebih dari 4 detik
         const retryTimer = setTimeout(() => {
             const retryEl = document.getElementById('retry-container');
             if (retryEl && !document.getElementById('loading-box').classList.contains('hidden')) {
@@ -155,7 +154,7 @@
 
         function loadProductData(id, retryCount) {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 6000); // Batas waktu maksimal 6 detik
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
 
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(id)}&t=${new Date().getTime()}`, { signal: controller.signal })
                 .then(res => res.json())
@@ -169,15 +168,15 @@
                         cardStatus = String(res.data.status || "").trim().toLowerCase();
                     }
 
-                    if (cardStatus === "activated") {
-                        targetReviewUrl = res.data.google_review_url || "";
-                        ownerWaLink = res.data.whatsapp_link || "";
+                    if (cardStatus !== "unactivated" && cardStatus !== "") {
+                        targetReviewUrl = res.data.google_review_url || "https://search.google.com/";
+                        ownerWaLink = res.data.whatsapp_link || "#";
                         
                         const ratingPage = document.getElementById('rating-page');
                         ratingPage.classList.remove('hidden');
                         ratingPage.classList.add('animate-page-fade-in');
                         
-                        const bizName = res.data.business_name || "Nama Bisnis";
+                        const bizName = res.data.business_name || "Ulasan Pelanggan";
                         const businessEl = document.getElementById('display-business');
                         businessEl.textContent = bizName;
 
@@ -193,14 +192,12 @@
                         return;
                     }
 
-                    // Jika unactivated / kosong: Tampilkan form aktivasi
                     document.getElementById('rating-page').classList.add('hidden');
                     document.getElementById('logo-box').classList.remove('hidden');
                     document.getElementById('form-box').classList.remove('hidden');
                 })
                 .catch(() => {
                     clearTimeout(timeoutId);
-                    // Jika mengalami timeout atau gagal koneksi, paksa buka halaman aktivasi agar tidak stuck
                     clearTimeout(retryTimer);
                     document.getElementById('loading-box').classList.add('hidden');
                     document.getElementById('rating-page').classList.add('hidden');
