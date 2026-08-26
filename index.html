@@ -126,8 +126,10 @@
 
         const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
 
+        // PENGAMAN UTAMA: Jika halaman kembali dari riwayat (tombol back browser), langsung bersihkan loading dan reload bersih
         window.addEventListener('pageshow', function(event) {
             if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                document.getElementById('success-overlay').classList.add('hidden');
                 window.location.reload(true);
             }
         });
