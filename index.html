@@ -126,12 +126,25 @@
 
         const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
 
-        // PERBAIKAN: Refresh otomatis HANYA AKTIF jika ulasan sudah dikirim dari halaman ulasan.
-        // Halaman aktivasi dijamin aman dan tidak akan pernah refresh sendiri.
+        // Reset bersih form ulasan jika pengguna kembali ke halaman ini
         window.addEventListener('focus', function() {
             if (sessionStorage.getItem("review_submitted") === "true") {
                 sessionStorage.removeItem("review_submitted");
                 window.location.reload(true);
+            } else {
+                // Reset kondisi bintang & emoji kembali bersih seperti semula
+                selectedStarRating = 0;
+                lastRatingCategory = null;
+                document.querySelectorAll('.star-btn').forEach(s => {
+                    s.className = "star-btn text-5xl focus:outline-none text-slate-200";
+                });
+                const emojiEl = document.getElementById('emoji-reaction');
+                emojiEl.style.opacity = '0';
+                emojiEl.textContent = "😊";
+                
+                const bottomSection = document.getElementById('dynamic-bottom-section');
+                bottomSection.style.opacity = '0';
+                bottomSection.innerHTML = `<p class="text-xs text-slate-400 italic">Ketuk bintang di atas untuk memberi penilaian...</p>`;
             }
         });
 
