@@ -126,19 +126,9 @@
 
         const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
 
-        // AUTO-REFRESH OTOMATIS: Jika pengguna kembali ke halaman web ini (dari riwayat cache / tombol back), langsung refresh bersih
+        // WAJIB BERSIH DARI CACHE: Paksa ambil data terbaru langsung dari server tanpa menggunakan cache lama
         window.addEventListener('pageshow', function(event) {
-            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-                window.location.reload(true);
-            }
-        });
-
-        // AUTO-REFRESH SAAT FOKUS KEMBALI: Jika tab/browser dibuka kembali setelah dari aplikasi lain
-        window.addEventListener('focus', function() {
-            if (sessionStorage.getItem("review_submitted") === "true") {
-                sessionStorage.removeItem("review_submitted");
-                window.location.reload(true);
-            }
+            window.location.reload(true);
         });
 
         if (!productId) {
@@ -150,7 +140,8 @@
         }
 
         function loadProductData(id, retryCount) {
-            fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(id)}`)
+            // Tambahkan parameter acak (?t=...) agar browser tidak mengambil data dari cache lama
+            fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(id)}&t=${new Date().getTime()}`)
                 .then(res => res.json())
                 .then(res => {
                     document.getElementById('loading-box').classList.add('hidden');
@@ -178,15 +169,9 @@
                         document.getElementById('interactive-content').classList.remove('disabled-section');
 
                     } else {
-                        if (retryCount < 2) {
-                            document.getElementById('loading-box').classList.remove('hidden');
-                            setTimeout(() => {
-                                loadProductData(id, retryCount + 1);
-                            }, 800);
-                        } else {
-                            document.getElementById('logo-box').classList.remove('hidden');
-                            document.getElementById('form-box').classList.remove('hidden');
-                        }
+                        // Jika status unactivated (setelah di-reset), paksa tampilkan menu aktivasi
+                        document.getElementById('logo-box').classList.remove('hidden');
+                        document.getElementById('form-box').classList.remove('hidden');
                     }
                 })
                 .catch(() => {
@@ -302,9 +287,6 @@
                 descEl.textContent = "Membuka WhatsApp...";
             }
             overlay.classList.remove('hidden');
-
-            // Tandai di sesi bahwa ulasan telah dikirim agar saat kembali langsung di-refresh
-            sessionStorage.setItem("review_submitted", "true");
 
             fetch(SCRIPT_URL, {
                 method: "POST",
