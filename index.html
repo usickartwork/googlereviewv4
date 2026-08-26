@@ -126,14 +126,12 @@
 
         const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
 
-        // PENGAMAN REFRESH TOTAL: Memaksa reload bersih saat halaman dibuka kembali (termasuk tombol back)
         window.addEventListener('pageshow', function(event) {
             if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
                 window.location.reload(true);
             }
         });
 
-        // Deteksi tambahan saat fokus kembali ke tab/browser
         window.addEventListener('focus', function() {
             if (sessionStorage.getItem("review_submitted") === "true") {
                 sessionStorage.removeItem("review_submitted");
@@ -251,29 +249,6 @@
         }
 
         function triggerSuccessAnimation(destination) {
-            const btnSubmit = document.getElementById('btnSubmitReview');
-            if (btnSubmit) {
-                btnSubmit.disabled = true;
-                btnSubmit.innerText = "Memproses...";
-            }
-
-            // Tampilkan animasi loading terlebih dahulu agar pengalaman pengguna konsisten
-            const overlay = document.getElementById('success-overlay');
-            const titleEl = document.getElementById('success-title');
-            const descEl = document.getElementById('success-desc');
-
-            if (destination === 'google') {
-                titleEl.textContent = "Sedang mengarahkan ke ulasan...";
-                descEl.textContent = "Membuka halaman Google Maps.";
-                if (typeof confetti === 'function') {
-                    confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
-                }
-            } else {
-                titleEl.textContent = "Menyiapkan pesan WhatsApp...";
-                descEl.textContent = "Membuka aplikasi WhatsApp.";
-            }
-            overlay.classList.remove('hidden');
-
             let clickType = (destination === 'google') ? 'maps' : 'wa';
             let feedbackText = "";
             let fullWaUrl = ownerWaLink.trim();
@@ -289,8 +264,10 @@
                 }
             }
 
-            // Kirim data ke Google Sheets di latar belakang
-            let ratingPromise = fetch(SCRIPT_URL, {
+            sessionStorage.setItem("review_submitted", "true");
+
+            // Kirim data ke Spreadsheet secara DIET/DIAM-DIAM di latar belakang TANPA menahan perpindahan halaman
+            fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
                     action: "save_rating",
@@ -299,7 +276,7 @@
                 })
             });
 
-            let clickPromise = fetch(SCRIPT_URL, {
+            fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
                     action: "click_stat",
@@ -308,30 +285,23 @@
                 })
             });
 
-            // Beri jeda 800ms agar animasi loading terlihat mulus, baru arahkan ke link tujuan
-            Promise.all([ratingPromise, clickPromise])
-                .then(() => {
-                    setTimeout(() => {
-                        sessionStorage.setItem("review_submitted", "true");
-                        if (destination === 'google') {
-                            window.location.href = targetReviewUrl;
-                        } else {
-                            overlay.classList.add('hidden');
-                            window.location.href = fullWaUrl;
-                        }
-                    }, 800);
-                })
-                .catch(() => {
-                    setTimeout(() => {
-                        sessionStorage.setItem("review_submitted", "true");
-                        if (destination === 'google') {
-                            window.location.href = targetReviewUrl;
-                        } else {
-                            overlay.classList.add('hidden');
-                            window.location.href = fullWaUrl;
-                        }
-                    }, 800);
-                });
+            // Langsung alihkan pengguna ke Google Maps atau WhatsApp seketika tanpa jeda loading yang lama
+            if (destination === 'google') {
+                const overlay = document.getElementById('success-overlay');
+                document.getElementById('success-title').textContent = "Mengarahkan ke Google Maps...";
+                document.getElementById('success-desc').textContent = "Mohon tunggu sebentar.";
+                overlay.classList.remove('hidden');
+
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
+                }
+
+                setTimeout(() => {
+                    window.location.href = targetReviewUrl;
+                }, 300);
+            } else {
+                window.location.href = fullWaUrl;
+            }
         }
 
         function activateCard() {
