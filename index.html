@@ -3,392 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beri Ulasan Kami</title>
+    <title>Google Review & Rating</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         * { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease; }
-        .star-btn { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease; }
-        .star-btn:hover { transform: scale(1.25); }
-        .star-active { transform: scale(1.3); }
         
-        @keyframes smoothSlideUp { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
-        .animate-smooth-slide { animation: smoothSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-        @keyframes smoothFadeOut { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-10px); } }
-        .animate-fade-out { animation: smoothFadeOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes popUp { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .animate-pop-up { animation: popUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-page-fade-in { animation: popUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
         @keyframes spinLoader { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .animate-spinner { animation: spinLoader 0.8s linear infinite; }
 
-        @keyframes emojiBounce { 0% { transform: scale(0.4); opacity: 0; } 50% { transform: scale(1.25); opacity: 1; } 70% { transform: scale(0.95); } 100% { transform: scale(1); opacity: 1; } }
-        .animate-emoji-bounce { animation: emojiBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes iconBounce { 0% { transform: scale(0.4); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        .animate-icon-bounce { animation: iconBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
-        @keyframes pageFadeIn { 0% { opacity: 0; transform: translateY(10px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-        .animate-page-fade-in { animation: pageFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-        @keyframes popUp { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .animate-pop-up { animation: popUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        
         .btn-modern:active { transform: scale(0.97); }
-        .disabled-section { opacity: 0.4; pointer-events: none; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-0 md:p-4">
 
-    <div id="main-container" class="w-full max-w-md min-h-screen md:min-h-0 bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center relative overflow-hidden">
+    <div id="main-container" class="w-full max-w-lg min-h-screen md:min-h-0 bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center relative overflow-hidden">
         
-        <!-- OVERLAY LOADING KILAT -->
-        <div id="success-overlay" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-6 text-center animate-pop-up">
-            <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spinner mb-4"></div>
-            <h2 id="success-title" class="text-base font-bold text-slate-900 mb-1">Memproses...</h2>
-            <p id="success-desc" class="text-xs text-slate-400 max-w-xs">Mohon tunggu sebentar.</p>
+        <!-- LOADING / MEMUAT AWAL -->
+        <div id="loadingScreen" class="space-y-4 animate-page-fade-in">
+            <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spinner mx-auto mb-3"></div>
+            <h2 class="text-base font-bold text-slate-900">Memuat Halaman...</h2>
+            <p class="text-xs text-slate-500">Menghubungkan ke kartu NFC Anda.</p>
         </div>
 
-        <!-- LOGO & FORM AKTIVASI KARTU -->
-        <div id="logo-box" class="mb-6 hidden animate-page-fade-in">
-            <img src="logo.png" alt="Logo Brand" class="h-20 w-auto mx-auto object-contain mb-3">
-            <h1 class="text-xl font-bold text-slate-900">Aktivasi Kartu</h1>
-            <p class="text-xs text-slate-500 mt-1">Silakan lengkapi data di bawah ini untuk menghubungkan kartu Anda.</p>
-        </div>
+        <!-- HALAMAN UTAMA REVIEW (JIKA SUDAH AKTIF) -->
+        <div id="reviewScreen" class="hidden space-y-6 animate-page-fade-in">
+            <div class="space-y-2">
+                <img src="logo.png" alt="Logo Brand" class="h-20 w-auto mx-auto object-contain mb-3">
+                <h1 id="displayBusinessName" class="text-2xl font-extrabold text-slate-900 tracking-tight">Nama Bisnis</h1>
+                <p class="text-xs text-slate-500">Bagaimana pengalaman Anda bersama kami?</p>
+            </div>
 
-        <!-- KOTAK LOADING DENGAN TOMBOL DARURAT ANTI-STUCK -->
-        <div id="loading-box" class="flex flex-col items-center justify-center space-y-3 py-6">
-            <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spinner"></div>
-            <h1 id="heading" class="text-base font-semibold text-slate-800">Memuat halaman...</h1>
-            <p id="subheading" class="text-xs text-slate-400">Mohon tunggu sebentar.</p>
-            <div id="retry-container" class="hidden pt-2">
-                <button onclick="location.reload()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-slate-200">
-                    🔄 Muat Ulang Halaman
-                </button>
-            </div>
-        </div>
-
-        <!-- HALAMAN FORM AKTIVASI -->
-        <div id="form-box" class="hidden space-y-4 text-left animate-page-fade-in">
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Bisnis / Usaha</label>
-                <input type="text" id="business-name" placeholder="Contoh: Coffee Shop Sukses" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor WhatsApp Owner</label>
-                <input type="tel" id="owner-wa-number" placeholder="Contoh: 081234567890" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
-                <p class="text-[11px] text-slate-400 mt-1">Masukkan nomor WhatsApp aktif (bebas pakai 08 atau 62).</p>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Link Google Review</label>
-                <input type="url" id="review-url" placeholder="https://search.google.com/..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
-                
-                <div class="mt-2 p-3 bg-blue-50/60 border border-blue-100 rounded-xl text-[11px] text-slate-600 leading-relaxed">
-                    <p class="font-semibold text-blue-900 mb-0.5">💡 Cara Mendapatkan Link:</p>
-                    <span>Harap convert terlebih dahulu link Google Maps bisnis Anda. <a href="https://productmate.com/google-review-link-generator" target="_blank" class="text-blue-600 font-bold underline hover:text-blue-800">[ Klik Disini ]</a> untuk membuka converter, lalu paste link hasilnya di kolom atas.</span>
+            <!-- Bagian Rating Bintang Interaktif -->
+            <div class="bg-slate-50 border border-slate-100 p-5 rounded-2xl space-y-3">
+                <p class="text-xs font-semibold text-slate-700">Berikan Penilaian Cepat Anda:</p>
+                <div class="flex justify-center gap-2" id="starContainer">
+                    <button onclick="submitRating(1)" class="text-3xl text-slate-300 hover:text-amber-400 transition hover:scale-110">★</button>
+                    <button onclick="submitRating(2)" class="text-3xl text-slate-300 hover:text-amber-400 transition hover:scale-110">★</button>
+                    <button onclick="submitRating(3)" class="text-3xl text-slate-300 hover:text-amber-400 transition hover:scale-110">★</button>
+                    <button onclick="submitRating(4)" class="text-3xl text-slate-300 hover:text-amber-400 transition hover:scale-110">★</button>
+                    <button onclick="submitRating(5)" class="text-3xl text-slate-300 hover:text-amber-400 transition hover:scale-110">★</button>
                 </div>
+                <div id="ratingFeedback" class="text-[11px] font-medium text-slate-400">Pilih bintang untuk mengirim masukan</div>
             </div>
+
+            <div class="space-y-3 pt-1">
+                <a id="btnGoogleReview" href="#" target="_blank" onclick="trackClick('maps')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3.5 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2 btn-modern">
+                    <span>⭐ Beri Ulasan di Google Maps</span>
+                </a>
+                
+                <a id="btnWhatsApp" href="#" target="_blank" onclick="trackClick('wa')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3.5 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2 btn-modern">
+                    <span>💬 Kirim Masukan ke WhatsApp</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- HALAMAN AKTIVASI KARTU (JIKA KARTU BELUM AKTIF / UNACTIVATED) -->
+        <div id="activateScreen" class="hidden space-y-4 text-left animate-page-fade-in">
+            <div class="text-center mb-4">
+                <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl font-bold">!</div>
+                <h2 class="text-lg font-bold text-slate-900">Kartu Belum Diaktifkan</h2>
+                <p class="text-xs text-slate-500 mt-1">Silakan atur data bisnis Anda untuk mengaktifkan kartu NFC ini.</p>
+            </div>
+
             <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">PIN Keamanan</label>
-                <input type="text" id="card-pin" placeholder="Contoh: 1234" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">ID Kartu</label>
+                <input type="text" id="actCardId" disabled class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs bg-slate-100 uppercase font-bold text-slate-500">
             </div>
-            <button onclick="activateCard()" id="btn-activate" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition shadow-sm mt-2 flex items-center justify-center gap-2 btn-modern">
-                <span>Aktifkan Kartu Sekarang</span>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Link Google Review (Maps)</label>
+                <input type="text" id="actReviewUrl" placeholder="https://g.page/r/..." class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Bisnis</label>
+                <input type="text" id="actBusinessName" placeholder="Contoh: Cafe Maju Jaya" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor WhatsApp (Untuk Masukan Private)</label>
+                <input type="text" id="actWaLink" placeholder="628123456789 atau https://wa.me/..." class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">PIN Keamanan (Untuk Reset & Dashboard)</label>
+                <input type="password" id="actPin" placeholder="••••" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none">
+            </div>
+
+            <button onclick="executeActivation()" id="btnActivate" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl text-xs transition shadow-sm mt-2 btn-modern">
+                Aktivasi Kartu Sekarang
             </button>
         </div>
 
-        <!-- HALAMAN UTAMA ULASAN -->
-        <div id="rating-page" class="hidden space-y-6">
-            <div class="text-center space-y-3 select-none">
-                <img src="logo.png" alt="Logo Brand" class="h-20 w-auto mx-auto object-contain">
-                
-                <div>
-                    <h1 id="display-business" class="font-extrabold text-slate-900 tracking-tight px-2 break-words"></h1>
-                    <p class="text-xs text-slate-500 font-medium px-4 mt-1.5">Terima kasih telah berkunjung! Kami sangat menghargai dukungan Anda.</p>
-                </div>
-                <p class="text-[11px] text-blue-600 uppercase tracking-widest font-bold pt-1">Berikan Ulasan Anda</p>
-            </div>
-            
-            <div id="interactive-content" class="space-y-6 disabled-section">
-                <div id="emoji-container" class="h-12 flex items-center justify-center">
-                    <div id="emoji-reaction" class="text-4xl opacity-0 transform scale-50">😊</div>
-                </div>
-                <div class="flex justify-center gap-3 py-1" id="star-container">
-                    <button onclick="handleRating(1)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
-                    <button onclick="handleRating(2)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
-                    <button onclick="handleRating(3)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
-                    <button onclick="handleRating(4)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
-                    <button onclick="handleRating(5)" class="star-btn text-5xl text-slate-200 focus:outline-none">★</button>
-                </div>
-                <div id="dynamic-bottom-section" class="opacity-0 min-h-[140px] bg-blue-50/30 p-3.5 rounded-2xl flex flex-col justify-center">
-                    <p class="text-xs text-slate-400 italic">Ketuk bintang di atas untuk memberi penilaian...</p>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
+        // GANTI DENGAN URL WEB APP SKRIP WEB 1 ANDA
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCV2-_bBSOJ0QqiW2Zu0zUViO-T42IAihhF_-LSiwqRT26i0-3QZdKTmMC8VW1ovHH/exec";
-        const urlParams = new URLSearchParams(window.location.search);
-        const productId = urlParams.get('id');
-        let targetReviewUrl = "", ownerWaLink = "", selectedStarRating = 0;
-        let lastRatingCategory = null;
+        
+        let urlParams = new URLSearchParams(window.location.search);
+        let productId = urlParams.get("id") || urlParams.get("product") || "";
 
-        const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
-
-        window.addEventListener('pageshow', function(event) {
-            document.getElementById('success-overlay').classList.add('hidden');
-        });
-
-        const retryTimer = setTimeout(() => {
-            const retryEl = document.getElementById('retry-container');
-            if (retryEl && !document.getElementById('loading-box').classList.contains('hidden')) {
-                retryEl.classList.remove('hidden');
+        window.onload = function() {
+            if (!productId) {
+                document.getElementById("loadingScreen").innerHTML = `
+                    <div class="text-red-500 font-bold text-sm">ID Kartu tidak ditemukan pada URL!</div>
+                    <p class="text-xs text-slate-500 mt-1">Pastikan Anda mengakses tautan yang benar (contoh: ?id=NFC-001).</p>
+                `;
+                return;
             }
-        }, 4000);
 
-        if (!productId) {
-            clearTimeout(retryTimer);
-            document.getElementById('loading-box').classList.add('hidden');
-            document.getElementById('logo-box').classList.remove('hidden');
-            document.getElementById('form-box').classList.remove('hidden');
-        } else {
-            loadProductData(productId, 0);
-        }
-
-        function loadProductData(id, retryCount) {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-            fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(id)}&t=${new Date().getTime()}`, { signal: controller.signal })
+            // Ambil data kartu dari Google Apps Script
+            fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(productId)}`)
                 .then(res => res.json())
                 .then(res => {
-                    clearTimeout(timeoutId);
-                    clearTimeout(retryTimer);
-                    document.getElementById('loading-box').classList.add('hidden');
+                    if (res.success) {
+                        if (res.data.status === "activated") {
+                            document.getElementById("loadingScreen").classList.add("hidden");
+                            document.getElementById("reviewScreen").classList.remove("hidden");
 
-                    let cardStatus = "";
-                    let reviewUrl = "";
-                    
-                    if (res.success && res.data) {
-                        cardStatus = String(res.data.status || "").trim().toLowerCase();
-                        reviewUrl = String(res.data.google_review_url || "").trim();
-                    }
-
-                    if (cardStatus === "activated" || (reviewUrl !== "" && reviewUrl !== "https://search.google.com/")) {
-                        targetReviewUrl = reviewUrl || "https://search.google.com/";
-                        ownerWaLink = res.data.whatsapp_link || "#";
-                        
-                        const ratingPage = document.getElementById('rating-page');
-                        ratingPage.classList.remove('hidden');
-                        ratingPage.classList.add('animate-page-fade-in');
-                        
-                        const bizName = res.data.business_name || "Ulasan Pelanggan";
-                        const businessEl = document.getElementById('display-business');
-                        businessEl.textContent = bizName;
-
-                        if (bizName.length <= 12) {
-                            businessEl.className = "text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-tight";
-                        } else if (bizName.length <= 25) {
-                            businessEl.className = "text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
+                            document.getElementById("displayBusinessName").innerText = res.data.business_name;
+                            document.getElementById("btnGoogleReview").href = res.data.google_review_url;
+                            
+                            let waLink = res.data.whatsapp_link;
+                            if (waLink && !waLink.startsWith("http")) {
+                                waLink = `https://wa.me/${waLink}`;
+                            }
+                            document.getElementById("btnWhatsApp").href = waLink || "#";
                         } else {
-                            businessEl.className = "text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
+                            document.getElementById("loadingScreen").classList.add("hidden");
+                            document.getElementById("activateScreen").classList.remove("hidden");
+                            document.getElementById("actCardId").value = productId.toUpperCase();
                         }
-
-                        document.getElementById('interactive-content').classList.remove('disabled-section');
-                        return;
+                    } else {
+                        alert("Gagal memuat data kartu.");
                     }
-
-                    document.getElementById('rating-page').classList.add('hidden');
-                    document.getElementById('logo-box').classList.remove('hidden');
-                    document.getElementById('form-box').classList.remove('hidden');
                 })
                 .catch(() => {
-                    if (retryCount < 2) {
-                        setTimeout(() => loadProductData(id, retryCount + 1), 1000);
-                        return;
-                    }
-
-                    clearTimeout(timeoutId);
-                    clearTimeout(retryTimer);
-                    document.getElementById('loading-box').classList.add('hidden');
-                    document.getElementById('rating-page').classList.add('hidden');
-                    document.getElementById('logo-box').classList.remove('hidden');
-                    document.getElementById('form-box').classList.remove('hidden');
+                    document.getElementById("loadingScreen").innerHTML = `
+                        <div class="text-red-500 font-bold text-sm">Koneksi Gagal</div>
+                        <p class="text-xs text-slate-500 mt-1">Periksa kembali koneksi internet Anda atau URL Apps Script.</p>
+                    `;
                 });
-        }
+        };
 
-        function handleRating(rating) {
-            selectedStarRating = rating;
-            
-            const emojiEl = document.getElementById('emoji-reaction');
-            emojiEl.textContent = reactionEmojis[rating] || "😊";
-            emojiEl.classList.remove('animate-emoji-bounce');
-            void emojiEl.offsetWidth; 
-            emojiEl.classList.add('animate-emoji-bounce');
-
-            document.querySelectorAll('.star-btn').forEach((s, i) => {
-                if (i < rating) {
-                    s.className = `star-btn text-5xl focus:outline-none text-amber-400 star-active`;
+        function submitRating(ratingVal) {
+            // Berikan efek visual bintang terpilih
+            let stars = document.getElementById("starContainer").children;
+            for (let i = 0; i < stars.length; i++) {
+                if (i < ratingVal) {
+                    stars[i].classList.remove("text-slate-300");
+                    stars[i].classList.add("text-amber-400");
                 } else {
-                    s.className = `star-btn text-5xl focus:outline-none text-slate-200`;
+                    stars[i].classList.remove("text-amber-400");
+                    stars[i].classList.add("text-slate-300");
                 }
-            });
-
-            const currentCategory = rating <= 3 ? 'low' : 'high';
-            const bottomSection = document.getElementById('dynamic-bottom-section');
-
-            if (lastRatingCategory !== currentCategory) {
-                if (lastRatingCategory !== null) {
-                    bottomSection.classList.remove('animate-smooth-slide');
-                    bottomSection.classList.add('animate-fade-out');
-                }
-
-                lastRatingCategory = currentCategory;
-                const delayTime = lastRatingCategory === null ? 0 : 200;
-
-                setTimeout(() => {
-                    if (currentCategory === 'low') {
-                        bottomSection.innerHTML = `
-                            <div class="space-y-2.5 text-left">
-                                <p class="text-xs font-semibold text-slate-700">Mohon maaf, apa yang bisa diperbaiki?</p>
-                                <textarea id="feedback-msg" rows="3" placeholder="Tulis masukan Anda..." class="w-full p-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 outline-none bg-white"></textarea>
-                                <button onclick="triggerSuccessAnimation('whatsapp')" id="btnSubmitReview" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl text-xs transition shadow-sm btn-modern">
-                                    Kirim Masukan ke WhatsApp Owner
-                                </button>
-                            </div>
-                        `;
-                    } else {
-                        bottomSection.innerHTML = `
-                            <div class="space-y-2.5 text-center">
-                                <p class="text-xs font-semibold text-blue-900">Terima kasih atas penilaian positif Anda!</p>
-                                <button onclick="triggerSuccessAnimation('google')" id="btnSubmitReview" class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl text-xs transition font-semibold shadow-sm btn-modern">
-                                    Kirim Ulasan Anda
-                                </button>
-                            </div>
-                        `;
-                    }
-                    bottomSection.classList.remove('animate-fade-out');
-                    bottomSection.style.opacity = '1';
-                    bottomSection.classList.add('animate-smooth-slide');
-                }, delayTime);
             }
+            document.getElementById("ratingFeedback").innerText = `Terima kasih! Penilaian ${ratingVal} Bintang dicatat.`;
 
-            if (rating > 3 && typeof confetti === 'function') {
-                confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-            }
+            // Kirim data rating ke server
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "save_rating", product_id: productId, rating: ratingVal })
+            }).catch(err => console.log(err));
         }
 
-        function formatWhatsAppLink(input) {
-            let cleaned = input.replace(/\D/g, ''); 
-            if (cleaned.startsWith('0')) {
-                cleaned = '62' + cleaned.substring(1); 
-            }
-            return 'https://wa.me/' + cleaned;
+        function trackClick(clickType) {
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "click_stat", product_id: productId, type: clickType })
+            }).catch(err => console.log(err));
         }
 
-        function triggerSuccessAnimation(destination) {
-            let clickType = (destination === 'google') ? 'maps' : 'wa';
-            let feedbackText = "";
-            let fullWaUrl = ownerWaLink.trim();
+        function executeActivation() {
+            let reviewUrl = document.getElementById("actReviewUrl").value.trim();
+            let bizName = document.getElementById("actBusinessName").value.trim();
+            let waLink = document.getElementById("actWaLink").value.trim();
+            let pin = document.getElementById("actPin").value.trim();
 
-            if (destination === 'whatsapp') {
-                const msgInput = document.getElementById('feedback-msg');
-                if (msgInput) {
-                    feedbackText = msgInput.value.trim();
-                }
-                if (feedbackText) {
-                    let customMsg = encodeURIComponent(`Halo Kak, saya ingin memberikan masukan:\n\n"${feedbackText}"\n\nPenilaian: ${selectedStarRating} Bintang`);
-                    fullWaUrl += `?text=${customMsg}`;
-                }
+            if (!reviewUrl || !bizName || !pin) {
+                alert("Link Google Review, Nama Bisnis, dan PIN wajib diisi!");
+                return;
             }
 
-            const overlay = document.getElementById('success-overlay');
-            const titleEl = document.getElementById('success-title');
-            const descEl = document.getElementById('success-desc');
-
-            if (destination === 'google') {
-                titleEl.textContent = "Terima kasih!";
-                descEl.textContent = "Mengarahkan ke Google Maps...";
-                if (typeof confetti === 'function') {
-                    confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
-                }
-            } else {
-                titleEl.textContent = "Terima kasih!";
-                descEl.textContent = "Membuka WhatsApp...";
-            }
-            overlay.classList.remove('hidden');
+            const btn = document.getElementById("btnActivate");
+            btn.innerText = "Mengaktifkan...";
+            btn.disabled = true;
 
             fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
-                    action: "save_rating",
+                    action: "activate",
                     product_id: productId,
-                    rating: selectedStarRating
+                    google_review_url: reviewUrl,
+                    business_name: bizName,
+                    whatsapp_link: waLink,
+                    pin: pin
                 })
-            });
-
-            fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                    action: "click_stat",
-                    product_id: productId,
-                    type: clickType
-                })
-            });
-
-            setTimeout(() => {
-                if (destination === 'google') {
-                    window.location.href = targetReviewUrl;
-                } else {
-                    window.location.href = fullWaUrl;
-                }
-            }, 400);
-        }
-
-        function activateCard() {
-            const reviewUrl = document.getElementById('review-url').value.trim();
-            const rawWaInput = document.getElementById('owner-wa-number').value.trim();
-
-            if (!reviewUrl.startsWith("https://search.google.com/")) {
-                alert("Link Google Review tidak valid!\n\nPastikan Anda menggunakan link resmi hasil konversi yang diawali dengan 'https://search.google.com/'.");
-                document.getElementById('review-url').focus();
-                return;
-            }
-
-            if (!rawWaInput) {
-                alert("Nomor WhatsApp wajib diisi!");
-                document.getElementById('owner-wa-number').focus();
-                return;
-            }
-
-            const formattedWaLink = formatWhatsAppLink(rawWaInput);
-
-            const overlay = document.getElementById('success-overlay');
-            document.getElementById('success-title').textContent = "Aktivasi Berhasil!";
-            document.getElementById('success-desc').textContent = "Kartu Anda kini sudah siap digunakan.";
-            overlay.classList.remove('hidden');
-
-            const data = { 
-                action: "activate", 
-                product_id: productId, 
-                google_review_url: reviewUrl, 
-                business_name: document.getElementById('business-name').value, 
-                pin: document.getElementById('card-pin').value, 
-                whatsapp_link: formattedWaLink 
-            };
-
-            fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify(data)
             })
-                .then(res => res.json())
-                .then(result => {
-                    setTimeout(() => {
-                        if (typeof confetti === 'function') {
-                            confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
-                        }
-                    }, 400);
-
-                    setTimeout(() => { location.reload(); }, 1200);
-                })
-                .catch(() => { location.reload(); });
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    alert("Kartu berhasil diaktifkan!");
+                    location.reload();
+                } else {
+                    alert("Gagal mengaktifkan kartu.");
+                    btn.innerText = "Aktivasi Kartu Sekarang";
+                    btn.disabled = false;
+                }
+            })
+            .catch(() => {
+                alert("Terjadi kesalahan jaringan.");
+                btn.innerText = "Aktivasi Kartu Sekarang";
+                btn.disabled = false;
+            });
         }
     </script>
 </body>
