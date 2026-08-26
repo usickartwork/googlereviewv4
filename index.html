@@ -38,7 +38,7 @@
 
     <div id="main-container" class="w-full max-w-md min-h-screen md:min-h-0 bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center relative overflow-hidden">
         
-        <!-- OVERLAY LOADING AMAN -->
+        <!-- OVERLAY LOADING KILAT -->
         <div id="success-overlay" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-6 text-center animate-pop-up">
             <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spinner mb-4"></div>
             <h2 id="success-title" class="text-base font-bold text-slate-900 mb-1">Menyimpan ulasan...</h2>
@@ -145,15 +145,14 @@
             document.getElementById('form-box').classList.remove('hidden');
         } else {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 7000);
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-            fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(productId)}`, { signal: controller.signal })
+            fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(productId)}&t=${new Date().getTime()}`, { signal: controller.signal })
                 .then(res => res.json())
                 .then(res => {
                     clearTimeout(timeoutId);
                     document.getElementById('loading-box').classList.add('hidden');
                     
-                    // DIPERBAIKI: Membaca struktur data dari Apps Script dengan aman
                     let cardData = (res.success && res.data) ? res.data : null;
                     let cardStatus = cardData ? String(cardData.status || "").trim().toLowerCase() : "";
 
@@ -267,9 +266,7 @@
 
             if (destination === 'whatsapp') {
                 const msgInput = document.getElementById('feedback-msg');
-                if (msgInput) {
-                    feedbackText = msgInput.value.trim();
-                }
+                if (msgInput) feedbackText = msgInput.value.trim();
                 if (feedbackText) {
                     let customMsg = encodeURIComponent(`Halo Kak, saya ingin memberikan masukan:\n\n"${feedbackText}"\n\nPenilaian: ${selectedStarRating} Bintang`);
                     fullWaUrl += `?text=${customMsg}`;
@@ -277,60 +274,23 @@
             }
 
             const overlay = document.getElementById('success-overlay');
-            const titleEl = document.getElementById('success-title');
-            const descEl = document.getElementById('success-desc');
-
-            if (destination === 'google') {
-                titleEl.textContent = "Menyimpan ulasan...";
-                descEl.textContent = "Mengarahkan ke Google Maps...";
-                if (typeof confetti === 'function') {
-                    confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
-                }
-            } else {
-                titleEl.textContent = "Menyimpan masukan...";
-                descEl.textContent = "Membuka WhatsApp...";
-            }
+            document.getElementById('success-title').textContent = "Menyimpan ulasan...";
+            document.getElementById('success-desc').textContent = destination === 'google' ? "Mengarahkan ke Google Maps..." : "Membuka WhatsApp...";
             overlay.classList.remove('hidden');
+
+            if (destination === 'google' && typeof confetti === 'function') {
+                confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
+            }
 
             sessionStorage.setItem("review_submitted", "true");
 
-            let ratingPromise = fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                    action: "save_rating",
-                    product_id: productId,
-                    rating: selectedStarRating
-                })
-            });
+            // PENGIRIMAN INSTAN DI LATAR BELAKANG (NON-BLOCKING)
+            navigator.sendBeacon(SCRIPT_URL, JSON.stringify({ action: "save_rating", product_id: productId, rating: selectedStarRating }));
+            navigator.sendBeacon(SCRIPT_URL, JSON.stringify({ action: "click_stat", product_id: productId, type: clickType }));
 
-            let clickPromise = fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                    action: "click_stat",
-                    product_id: productId,
-                    type: clickType
-                })
-            });
-
-            Promise.all([ratingPromise, clickPromise])
-                .then(() => {
-                    setTimeout(() => {
-                        if (destination === 'google') {
-                            window.location.href = targetReviewUrl;
-                        } else {
-                            window.location.href = fullWaUrl;
-                        }
-                    }, 1200);
-                })
-                .catch(() => {
-                    setTimeout(() => {
-                        if (destination === 'google') {
-                            window.location.href = targetReviewUrl;
-                        } else {
-                            window.location.href = fullWaUrl;
-                        }
-                    }, 1200);
-                });
+            setTimeout(() => {
+                window.location.href = (destination === 'google') ? targetReviewUrl : fullWaUrl;
+            }, 600);
         }
 
         function activateCard() {
