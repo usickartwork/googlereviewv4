@@ -126,12 +126,8 @@
 
         const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
 
-        window.addEventListener('pageshow', function(event) {
-            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-                window.location.reload(true);
-            }
-        });
-
+        // PERBAIKAN: Refresh otomatis HANYA AKTIF jika ulasan sudah dikirim dari halaman ulasan.
+        // Halaman aktivasi dijamin aman dan tidak akan pernah refresh sendiri.
         window.addEventListener('focus', function() {
             if (sessionStorage.getItem("review_submitted") === "true") {
                 sessionStorage.removeItem("review_submitted");
@@ -144,7 +140,6 @@
             document.getElementById('logo-box').classList.remove('hidden');
             document.getElementById('form-box').classList.remove('hidden');
         } else {
-            // Fungsi Fetch dengan Retry Otomatis (Mencegah mental ke aktivasi jika server lambat)
             function fetchWithRetry(id, retries) {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 6000);
