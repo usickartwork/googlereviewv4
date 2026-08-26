@@ -142,35 +142,39 @@
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(id)}&t=${new Date().getTime()}`)
                 .then(res => res.json())
                 .then(res => {
-                    if (res.success && res.data && res.data.status === "activated") {
-                        document.getElementById('loading-box').classList.add('hidden');
-                        targetReviewUrl = res.data.google_review_url || "";
-                        ownerWaLink = res.data.whatsapp_link || "";
-                        
-                        const ratingPage = document.getElementById('rating-page');
-                        ratingPage.classList.remove('hidden');
-                        ratingPage.classList.add('animate-page-fade-in');
-                        
-                        const bizName = res.data.business_name || "Nama Bisnis";
-                        const businessEl = document.getElementById('display-business');
-                        businessEl.textContent = bizName;
+                    if (res.success && res.data) {
+                        let cardStatus = String(res.data.status || "").trim().toLowerCase();
 
-                        if (bizName.length <= 12) {
-                            businessEl.className = "text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-tight";
-                        } else if (bizName.length <= 25) {
-                            businessEl.className = "text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
-                        } else {
-                            businessEl.className = "text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
+                        if (cardStatus === "activated") {
+                            document.getElementById('loading-box').classList.add('hidden');
+                            targetReviewUrl = res.data.google_review_url || "";
+                            ownerWaLink = res.data.whatsapp_link || "";
+                            
+                            const ratingPage = document.getElementById('rating-page');
+                            ratingPage.classList.remove('hidden');
+                            ratingPage.classList.add('animate-page-fade-in');
+                            
+                            const bizName = res.data.business_name || "Nama Bisnis";
+                            const businessEl = document.getElementById('display-business');
+                            businessEl.textContent = bizName;
+
+                            if (bizName.length <= 12) {
+                                businessEl.className = "text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-tight";
+                            } else if (bizName.length <= 25) {
+                                businessEl.className = "text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
+                            } else {
+                                businessEl.className = "text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight px-2 break-words leading-snug";
+                            }
+
+                            document.getElementById('interactive-content').classList.remove('disabled-section');
+                            return;
                         }
-
-                        document.getElementById('interactive-content').classList.remove('disabled-section');
-
-                    } else {
-                        // Sembunyikan loading, lalu tampilkan form aktivasi dengan mulus
-                        document.getElementById('loading-box').classList.add('hidden');
-                        document.getElementById('logo-box').classList.remove('hidden');
-                        document.getElementById('form-box').classList.remove('hidden');
                     }
+
+                    // Jika unactivated atau data kosong: Tampilkan halaman aktivasi
+                    document.getElementById('loading-box').classList.add('hidden');
+                    document.getElementById('logo-box').classList.remove('hidden');
+                    document.getElementById('form-box').classList.remove('hidden');
                 })
                 .catch(() => {
                     if (retryCount < 2) {
