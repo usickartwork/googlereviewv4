@@ -130,8 +130,9 @@
 
         const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
 
+        // PENGAMAN UTAMA: Memastikan halaman langsung refresh total jika dibuka kembali dari memori cache browser (tombol back)
         window.addEventListener('pageshow', function(event) {
-            if (event.persisted) {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
                 window.location.reload();
             }
         });
