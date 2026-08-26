@@ -266,7 +266,7 @@
 
             sessionStorage.setItem("review_submitted", "true");
 
-            // Kirim data ke Spreadsheet secara DIET/DIAM-DIAM di latar belakang TANPA menahan perpindahan halaman
+            // Kirim data ke Spreadsheet secara diam-diam di latar belakang
             fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
@@ -285,23 +285,30 @@
                 })
             });
 
-            // Langsung alihkan pengguna ke Google Maps atau WhatsApp seketika tanpa jeda loading yang lama
-            if (destination === 'google') {
-                const overlay = document.getElementById('success-overlay');
-                document.getElementById('success-title').textContent = "Mengarahkan ke Google Maps...";
-                document.getElementById('success-desc').textContent = "Mohon tunggu sebentar.";
-                overlay.classList.remove('hidden');
+            // Tampilkan animasi loading kilat yang pas (hanya 350 milidetik agar tidak terasa lama)
+            const overlay = document.getElementById('success-overlay');
+            const titleEl = document.getElementById('success-title');
+            const descEl = document.getElementById('success-desc');
 
+            if (destination === 'google') {
+                titleEl.textContent = "Mengarahkan ke Google Maps...";
+                descEl.textContent = "Mohon tunggu sebentar.";
                 if (typeof confetti === 'function') {
                     confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
                 }
-
-                setTimeout(() => {
-                    window.location.href = targetReviewUrl;
-                }, 300);
             } else {
-                window.location.href = fullWaUrl;
+                titleEl.textContent = "Membuka WhatsApp...";
+                descEl.textContent = "Menyiapkan pesan Anda.";
             }
+            overlay.classList.remove('hidden');
+
+            setTimeout(() => {
+                if (destination === 'google') {
+                    window.location.href = targetReviewUrl;
+                } else {
+                    window.location.href = fullWaUrl;
+                }
+            }, 350);
         }
 
         function activateCard() {
