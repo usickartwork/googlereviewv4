@@ -126,16 +126,19 @@
 
         const reactionEmojis = { 1: "😞", 2: "😕", 3: "😐", 4: "😊", 5: "🤩" };
 
-        // PENGAMAN BERSIH: Paksa sembunyikan overlay saat halaman dimuat atau di-focus kembali dari riwayat cache
+        // AUTO-REFRESH OTOMATIS: Jika pengguna kembali ke halaman web ini (dari riwayat cache / tombol back), langsung refresh bersih
         window.addEventListener('pageshow', function(event) {
-            document.getElementById('success-overlay').classList.add('hidden');
             if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
                 window.location.reload(true);
             }
         });
 
+        // AUTO-REFRESH SAAT FOKUS KEMBALI: Jika tab/browser dibuka kembali setelah dari aplikasi lain
         window.addEventListener('focus', function() {
-            document.getElementById('success-overlay').classList.add('hidden');
+            if (sessionStorage.getItem("review_submitted") === "true") {
+                sessionStorage.removeItem("review_submitted");
+                window.location.reload(true);
+            }
         });
 
         if (!productId) {
@@ -147,8 +150,6 @@
         }
 
         function loadProductData(id, retryCount) {
-            document.getElementById('success-overlay').classList.add('hidden'); // Pastikan overlay tertutup aman
-
             fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(id)}`)
                 .then(res => res.json())
                 .then(res => {
@@ -301,6 +302,9 @@
                 descEl.textContent = "Membuka WhatsApp...";
             }
             overlay.classList.remove('hidden');
+
+            // Tandai di sesi bahwa ulasan telah dikirim agar saat kembali langsung di-refresh
+            sessionStorage.setItem("review_submitted", "true");
 
             fetch(SCRIPT_URL, {
                 method: "POST",
