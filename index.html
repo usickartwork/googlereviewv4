@@ -38,10 +38,10 @@
 
     <div id="main-container" class="w-full max-w-md min-h-screen md:min-h-0 bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center relative overflow-hidden">
         
-        <!-- OVERLAY LOADING KILAT -->
+        <!-- OVERLAY LOADING AMAN (MENTUNTASKAN DATA) -->
         <div id="success-overlay" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-6 text-center animate-pop-up">
             <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spinner mb-4"></div>
-            <h2 id="success-title" class="text-base font-bold text-slate-900 mb-1">Memproses...</h2>
+            <h2 id="success-title" class="text-base font-bold text-slate-900 mb-1">Menyimpan ulasan...</h2>
             <p id="success-desc" class="text-xs text-slate-400 max-w-xs">Mohon tunggu sebentar.</p>
         </div>
 
@@ -118,7 +118,6 @@
     </div>
 
     <script>
-        // PASTIKAN URL SCRIPT INI SESUAI DENGAN DEPLOYMENT TERBARU ANDA
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCV2-_bBSOJ0QqiW2Zu0zUViO-T42IAihhF_-LSiwqRT26i0-3QZdKTmMC8VW1ovHH/exec";
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
@@ -145,7 +144,6 @@
             document.getElementById('logo-box').classList.remove('hidden');
             document.getElementById('form-box').classList.remove('hidden');
         } else {
-            // Gunakan AbortController untuk pengaman timeout (anti-stuck)
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 7000);
 
@@ -275,10 +273,28 @@
                 }
             }
 
+            // Tampilkan overlay loading sebentar untuk memastikan data benar-benar tuntas terkirim
+            const overlay = document.getElementById('success-overlay');
+            const titleEl = document.getElementById('success-title');
+            const descEl = document.getElementById('success-desc');
+
+            if (destination === 'google') {
+                titleEl.textContent = "Menyimpan ulasan & membuka Maps...";
+                descEl.textContent = "Mohon tunggu sebentar.";
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
+                }
+            } else {
+                titleEl.textContent = "Menyimpan masukan & membuka WA...";
+                descEl.textContent = "Mohon tunggu sebentar.";
+            }
+            overlay.classList.remove('hidden');
+
             sessionStorage.setItem("review_submitted", "true");
 
-            // Kirim data rating & statistik ke Spreadsheet di latar belakang secara diam-diam
-            fetch(SCRIPT_URL, {
+            // KUNCI UTAMA: Tunggu hingga server Google Sheets selesai merespons penyimpanan rating dan klik, 
+            // baru pindah halaman agar status kartu tetap terbaca aman dan tidak berubah jadi unactivated.
+            let ratingPromise = fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
                     action: "save_rating",
@@ -287,7 +303,7 @@
                 })
             });
 
-            fetch(SCRIPT_URL, {
+            let clickPromise = fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
                     action: "click_stat",
@@ -296,29 +312,26 @@
                 })
             });
 
-            const overlay = document.getElementById('success-overlay');
-            const titleEl = document.getElementById('success-title');
-            const descEl = document.getElementById('success-desc');
-
-            if (destination === 'google') {
-                titleEl.textContent = "Mengarahkan ke Google Maps...";
-                descEl.textContent = "Mohon tunggu sebentar.";
-                if (typeof confetti === 'function') {
-                    confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
-                }
-            } else {
-                titleEl.textContent = "Membuka WhatsApp...";
-                descEl.textContent = "Menyiapkan pesan Anda.";
-            }
-            overlay.classList.remove('hidden');
-
-            setTimeout(() => {
-                if (destination === 'google') {
-                    window.location.href = targetReviewUrl;
-                } else {
-                    window.location.href = fullWaUrl;
-                }
-            }, 350);
+            Promise.all([ratingPromise, clickPromise])
+                .then(() => {
+                    setTimeout(() => {
+                        if (destination === 'google') {
+                            window.location.href = targetReviewUrl;
+                        } else {
+                            window.location.href = fullWaUrl;
+                        }
+                    }, 400);
+                })
+                .catch(() => {
+                    // Fallback jika terjadi gangguan jaringan saat fetch
+                    setTimeout(() => {
+                        if (destination === 'google') {
+                            window.location.href = targetReviewUrl;
+                        } else {
+                            window.location.href = fullWaUrl;
+                        }
+                    }, 400);
+                });
         }
 
         function activateCard() {
