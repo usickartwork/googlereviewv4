@@ -52,10 +52,16 @@
             <p class="text-xs text-slate-500 mt-1">Silakan lengkapi data di bawah ini untuk menghubungkan kartu Anda.</p>
         </div>
 
+        <!-- KOTAK LOADING DENGAN TOMBOL DARURAT ANTI-STUCK -->
         <div id="loading-box" class="flex flex-col items-center justify-center space-y-3 py-6">
             <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spinner"></div>
             <h1 id="heading" class="text-base font-semibold text-slate-800">Memuat halaman...</h1>
             <p id="subheading" class="text-xs text-slate-400">Mohon tunggu sebentar.</p>
+            <div id="retry-container" class="hidden pt-2">
+                <button onclick="location.reload()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-slate-200">
+                    🔄 Muat Ulang Halaman
+                </button>
+            </div>
         </div>
 
         <!-- HALAMAN FORM AKTIVASI -->
@@ -130,7 +136,16 @@
             document.getElementById('success-overlay').classList.add('hidden');
         });
 
+        // Munculkan tombol retry darurat jika proses memuat lebih dari 4 detik
+        const retryTimer = setTimeout(() => {
+            const retryEl = document.getElementById('retry-container');
+            if (retryEl && !document.getElementById('loading-box').classList.contains('hidden')) {
+                retryEl.classList.remove('hidden');
+            }
+        }, 4000);
+
         if (!productId) {
+            clearTimeout(retryTimer);
             document.getElementById('loading-box').classList.add('hidden');
             document.getElementById('logo-box').classList.remove('hidden');
             document.getElementById('form-box').classList.remove('hidden');
@@ -139,9 +154,14 @@
         }
 
         function loadProductData(id, retryCount) {
-            fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(id)}&t=${new Date().getTime()}`)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000); // Batas waktu maksimal 6 detik
+
+            fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(id)}&t=${new Date().getTime()}`, { signal: controller.signal })
                 .then(res => res.json())
                 .then(res => {
+                    clearTimeout(timeoutId);
+                    clearTimeout(retryTimer);
                     document.getElementById('loading-box').classList.add('hidden');
 
                     let cardStatus = "";
@@ -149,7 +169,6 @@
                         cardStatus = String(res.data.status || "").trim().toLowerCase();
                     }
 
-                    // Jika status aktif: Tampilkan halaman ulasan
                     if (cardStatus === "activated") {
                         targetReviewUrl = res.data.google_review_url || "";
                         ownerWaLink = res.data.whatsapp_link || "";
@@ -174,22 +193,19 @@
                         return;
                     }
 
-                    // Jika unactivated / kosong: Sembunyikan halaman ulasan secara mutlak, lalu tampilkan form aktivasi
+                    // Jika unactivated / kosong: Tampilkan form aktivasi
                     document.getElementById('rating-page').classList.add('hidden');
                     document.getElementById('logo-box').classList.remove('hidden');
                     document.getElementById('form-box').classList.remove('hidden');
                 })
                 .catch(() => {
-                    if (retryCount < 2) {
-                        setTimeout(() => {
-                            loadProductData(id, retryCount + 1);
-                        }, 1000);
-                    } else {
-                        document.getElementById('loading-box').classList.add('hidden');
-                        document.getElementById('rating-page').classList.add('hidden');
-                        document.getElementById('logo-box').classList.remove('hidden');
-                        document.getElementById('form-box').classList.remove('hidden');
-                    }
+                    clearTimeout(timeoutId);
+                    // Jika mengalami timeout atau gagal koneksi, paksa buka halaman aktivasi agar tidak stuck
+                    clearTimeout(retryTimer);
+                    document.getElementById('loading-box').classList.add('hidden');
+                    document.getElementById('rating-page').classList.add('hidden');
+                    document.getElementById('logo-box').classList.remove('hidden');
+                    document.getElementById('form-box').classList.remove('hidden');
                 });
         }
 
