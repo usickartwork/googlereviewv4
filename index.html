@@ -38,7 +38,7 @@
 
     <div id="main-container" class="w-full max-w-md min-h-screen md:min-h-0 bg-white md:rounded-2xl md:shadow-sm md:border md:border-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center relative overflow-hidden">
         
-        <!-- OVERLAY LOADING SAAT AKSI -->
+        <!-- OVERLAY LOADING KILAT -->
         <div id="success-overlay" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-6 text-center animate-pop-up">
             <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spinner mb-4"></div>
             <h2 id="success-title" class="text-base font-bold text-slate-900 mb-1">Memproses...</h2>
@@ -145,14 +145,17 @@
             document.getElementById('logo-box').classList.remove('hidden');
             document.getElementById('form-box').classList.remove('hidden');
         } else {
-            // Ambil data kartu dari Google Sheets melalui Apps Script
-            fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(productId)}`)
+            // Gunakan AbortController untuk pengaman timeout (anti-stuck)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+            fetch(`${SCRIPT_URL}?action=get_product&product_id=${encodeURIComponent(productId)}`, { signal: controller.signal })
                 .then(res => res.json())
                 .then(res => {
+                    clearTimeout(timeoutId);
                     document.getElementById('loading-box').classList.add('hidden');
                     
-                    // Cek apakah data berhasil dan statusnya aktif (fleksibel mengecek 'activated' atau bernilai true)
-                    if (res.success && res.data && (res.data.status === "activated" || res.data.status === true || res.data.business_name)) {
+                    if (res.success && res.data && res.data.status === "activated") {
                         targetReviewUrl = res.data.google_review_url || "";
                         ownerWaLink = res.data.whatsapp_link || "";
                         
@@ -175,14 +178,13 @@
                         document.getElementById('interactive-content').classList.remove('disabled-section');
 
                     } else {
-                        // Jika kartu belum aktif atau statusnya bukan activated, tampilkan form aktivasi
                         document.getElementById('logo-box').classList.remove('hidden');
                         document.getElementById('form-box').classList.remove('hidden');
                     }
                 })
-                .catch(err => {
+                .catch(() => {
+                    clearTimeout(timeoutId);
                     document.getElementById('loading-box').classList.add('hidden');
-                    // Jika terjadi error koneksi, tampilkan form aktivasi sebagai fallback agar halaman tidak kosong/stuck
                     document.getElementById('logo-box').classList.remove('hidden');
                     document.getElementById('form-box').classList.remove('hidden');
                 });
@@ -275,7 +277,7 @@
 
             sessionStorage.setItem("review_submitted", "true");
 
-            // Kirim data ke Spreadsheet secara latar belakang
+            // Kirim data rating & statistik ke Spreadsheet di latar belakang secara diam-diam
             fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
